@@ -16,7 +16,6 @@ const LoginFrom = () => {
     handleSubmit,
     formState: { errors },
   } = useForm();
-
   const onSubmit = async (data) => {
     setCustomError("");
     try {
@@ -37,9 +36,8 @@ const LoginFrom = () => {
       }
     }
   };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-transparent px-4">
       <div className="max-w-md w-full bg-white shadow-md rounded-2xl p-6">
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-900">
           Login
