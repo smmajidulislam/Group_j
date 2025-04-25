@@ -1,28 +1,53 @@
-const express = require("express");
-const cookieParser = require("cookie-parser");
-const cors = require("cors");
-const dbConnect = require("./dbConnect/dbConnect");
-const router = require("./rotue/rotue");
-require("dotenv").config();
-const PORT = process.env.PORT || 8080;
-const app = express();
-app.use(cookieParser());
-app.use(
-  cors({
-    origin: "http://localhost:3000", // frontend origin
-    credentials: true, // cookie allow করার জন্য
-  })
-);
-app.use(express.json());
-dbConnect();
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const path = require('path');
+const morgan = require('morgan');
 
-app.use("/api", router);
-app.use((err, req, res, next) => {
-  res.status(err.status || 500).send({
-    error: err.message,
-  });
-  next();
+// Import routes
+const authRoutes = require('./routes/auth.routes');
+const postRoutes = require('./routes/post.routes');
+const commentRoutes = require('./routes/comment.routes');
+const userRoutes = require('./routes/user.routes');
+
+// Load environment variables
+dotenv.config();
+
+// Initialize express app
+const app = express();
+
+// Middlewares
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/comments', commentRoutes);
+app.use('/api/users', userRoutes);
+
+// Root route
+app.get('/', (req, res) => {
+    res.send('Blog API is running');
 });
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+
+// Connect to MongoDB and start server
+const PORT = process.env.PORT || 5000;
+
+mongoose
+    .connect(process.env.MONGODB_URL)
+    .then(() => {
+        console.log('Connected to MongoDB');
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    })
+    .catch(error => {
+        console.error('MongoDB connection error:', error);
+    });
