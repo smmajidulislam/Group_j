@@ -8,10 +8,9 @@ export const authApi = createApi({
   endpoints: (builder) => ({
     login: builder.mutation({
       query: (data) => ({
-        url: "/login",
+        url: "/auth/login",
         method: "POST",
         body: data,
-        credentials: "include",
       }),
     }),
     getUser: builder.query({
@@ -21,16 +20,8 @@ export const authApi = createApi({
         credentials: "include",
       }),
     }),
-    singOut: builder.mutation({
-      query: () => ({
-        url: "/logout",
-        method: "POST",
-        credentials: "include",
-      }),
-    }),
   }),
 });
 
-export const { useLoginMutation, useSingOutMutation, useGetUserQuery } =
-  authApi;
+export const { useLoginMutation, useGetUserQuery } = authApi;
 export default authApi;

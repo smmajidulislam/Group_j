@@ -5,7 +5,7 @@ import { useAuth } from "../contexts/authContext/AuthContext";
 
 const Nav = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, isLoading, singOutUser } = useAuth();
+  const { user, isLoading, singOutUser, logout } = useAuth();
 
   const renderSkeleton = () => (
     <div className="hidden md:flex space-x-4 animate-pulse">
@@ -60,7 +60,7 @@ const Nav = () => {
               >
                 About Us
               </Link>
-              {user?.role === "user" && (
+              {user?.user?.isAdmin === false && (
                 <Link
                   href="/dashbord"
                   className="hover:bg-gray-700 px-3 py-2 rounded"
@@ -68,7 +68,7 @@ const Nav = () => {
                   Dashboard
                 </Link>
               )}
-              {user?.role === "admin" && (
+              {user?.user?.isAdmin === true && (
                 <Link
                   href="/admindashbord"
                   className="hover:bg-gray-700 px-3 py-2 rounded"
@@ -79,7 +79,7 @@ const Nav = () => {
               {user && (
                 <button
                   className="hover:bg-gray-700 px-3 py-2 rounded"
-                  onClick={() => singOutUser()}
+                  onClick={() => logout()}
                 >
                   Log Out
                 </button>
@@ -169,7 +169,7 @@ const Nav = () => {
               >
                 About Us
               </Link>
-              {user?.role === "user" && (
+              {user?.user?.isAdmin === false && (
                 <Link
                   href="/dashbord"
                   className="block hover:bg-gray-700 px-3 py-2 rounded"
@@ -177,7 +177,7 @@ const Nav = () => {
                   Dashboard
                 </Link>
               )}
-              {user?.role === "admin" && (
+              {user?.user?.isAdmin === true && (
                 <Link
                   href="/admindashbord"
                   className="block hover:bg-gray-700 px-3 py-2 rounded"
@@ -188,7 +188,7 @@ const Nav = () => {
               {user && (
                 <button
                   className="hover:bg-gray-700 px-3 py-2 rounded"
-                  onClick={() => singOutUser()}
+                  onClick={() => logout()}
                 >
                   Log Out
                 </button>

@@ -23,6 +23,7 @@ const LoginFrom = () => {
         email: data.email,
         password: data.password,
       }).unwrap();
+      console.log(res);
       jsCookies.set("user", JSON.stringify(res), {
         expires: new Date(res.expire),
       });
