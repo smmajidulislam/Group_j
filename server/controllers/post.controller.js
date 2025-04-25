@@ -24,8 +24,8 @@ exports.getPosts = async (req, res) => {
                 title: post.title,
                 content: post.content,
                 author: {
-                    _id: post.author._id,
-                    name: post.author.name
+                    _id: post.author?._id,
+                    name: post.author?.name
                 },
                 createdAt: post.createdAt,
                 updatedAt: post.updatedAt,
@@ -214,15 +214,20 @@ exports.deletePost = async (req, res) => {
 // @route   PUT /api/posts/:id/like
 // @access  Private
 exports.likePost = async (req, res) => {
+    console.log('req.user == >', req.user);
+    console.log('req.params == >', req.params);
     try {
-        const post = await Post.findById(req.params.id);
+        const post = await Post.findById(req.params?.id);
+
+        console.log('post like == >', post);
 
         if (!post) {
             return res.status(404).json({ message: 'Post not found' });
         }
 
         // Check if user has already liked this post
-        const alreadyLiked = post.likedBy.includes(req.user._id);
+        const alreadyLiked = post.likedBy.includes(req.user?._id);
+        console.log('alreadyLiked == >', alreadyLiked);
 
         // Check if user has disliked this post
         const alreadyDisliked = post.dislikedBy.includes(req.user._id);

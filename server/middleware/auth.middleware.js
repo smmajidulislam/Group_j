@@ -40,7 +40,9 @@ exports.protect = async (req, res, next) => {
 
 // Admin middleware
 exports.admin = (req, res, next) => {
-    if (req.user && req.user.isAdmin) {
+    // Check if user is an admin
+    console.log('req.user admin check == >', req.user);
+    if (req.user && req.user?.isAdmin) {
         next();
     } else {
         res.status(401).json({ message: 'Not authorized as an admin' });
