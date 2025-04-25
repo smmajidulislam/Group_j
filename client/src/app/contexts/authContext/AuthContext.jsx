@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [singOut] = useSingOutMutation();
-
+ 
   useEffect(() => {
     const userData = Cookies.get("user");
     if (userData) {

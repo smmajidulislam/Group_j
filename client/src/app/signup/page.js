@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 
-export default function Singup() {
+export default function Signup() {
   const [singupData, setSingupData] = useState({
     name: '',
     email: '',

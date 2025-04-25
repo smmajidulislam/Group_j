@@ -84,7 +84,7 @@ export default function Services() {
           Contact Us
         </button>
       </div>
-
+      
       <Modal isOpen={isOpen} onClose={closeModal} title="Service Inquiry">
         {/* This is a modal component using Tailwind CSS in Next.js. */}
       </Modal>
