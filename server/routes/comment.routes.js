@@ -5,11 +5,13 @@ const {
     getCommentsByPost,
     createComment,
     updateComment,
-    deleteComment
+    deleteComment,
+    getAllCommentsByPostId
 } = require('../controllers/comment.controller');
 
 // Public routes
 router.get('/:postId', getCommentsByPost);
+router.get('/', getAllCommentsByPostId);
 
 // Protected routes
 router.post('/', protect, createComment);

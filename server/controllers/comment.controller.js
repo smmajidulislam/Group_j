@@ -68,6 +68,39 @@ exports.createComment = async (req, res) => {
     }
 };
 
+// @desc    Get all comments by a specific post ID
+// @route   GET /api/comments?postId={postId}
+// @access  Public
+exports.getAllCommentsByPostId = async (req, res) => {
+    try {
+        const { postId } = req.query;
+
+        if (!postId) {
+            return res.status(400).json({ message: 'Post ID is required' });
+        }
+
+        const comments = await Comment.find({ post: postId })
+            .populate('author', 'name')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json(
+            comments.map(comment => ({
+                _id: comment._id,
+                content: comment.content,
+                author: {
+                    _id: comment.author._id,
+                    name: comment.author.name
+                },
+                createdAt: comment.createdAt,
+                postId: comment.post // include post ID if needed
+            }))
+        );
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 // @desc    Update a comment
 // @route   PUT /api/comments/:id
 // @access  Private
@@ -81,7 +114,7 @@ exports.updateComment = async (req, res) => {
 
         // Check if user is comment author
         if (
-            comment.author.toString() !== req.user._id.toString() &&
+            comment.author.toString() !== req.user?._id.toString() &&
             !req.user.isAdmin
         ) {
             return res.status(401).json({ message: 'Not authorized' });
