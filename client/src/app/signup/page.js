@@ -11,7 +11,7 @@ export default function SignupPage() {
     watch,
     formState: { errors, isValid, isDirty },
   } = useForm({
-    mode: "onChange", // Enable real-time validation
+    mode: "onChange",  
   });
 
   const onSubmit = async (data) => {
@@ -19,13 +19,13 @@ export default function SignupPage() {
     try {
       const { name, email, password, confirmPassword } = data;
       console.log({ name, email, password, confirmPassword });
-      // Add your API call here
+      
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Watch password field for match validation
+  
   const password = watch("password");
 
   return (
@@ -47,7 +47,7 @@ export default function SignupPage() {
             )}
           </div>
 
-          {/* Email Field */}
+          
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <input
@@ -65,8 +65,7 @@ export default function SignupPage() {
               <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
             )}
           </div>
-
-          {/* Password Field */}
+ 
           <div>
             <label className="block text-sm font-medium text-gray-700">Password</label>
             <input
@@ -85,7 +84,7 @@ export default function SignupPage() {
             )}
           </div>
 
-          {/* Confirm Password Field */}
+           
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Confirm Password
@@ -106,7 +105,7 @@ export default function SignupPage() {
             )}
           </div>
 
-          {/* Submit Button */}
+         
           <button
             type="submit"
             disabled={!isValid || isLoading}

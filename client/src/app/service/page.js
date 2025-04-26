@@ -48,10 +48,17 @@ export default function Services() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Page Title */}
+<<<<<<< HEAD
       <h1 className="text-3xl sm:text-4xl font-bold text-gray-200 text-center mb-4">
         Our Services
       </h1>
       <p className="text-center text-gray-400 text-sm sm:text-base mb-10 max-w-2xl mx-auto">
+=======
+      <h1 className="text-3xl sm:text-4xl font-bold text-center mb-4">
+        Our Services
+      </h1>
+      <p className="text-center text-gray-600 text-sm sm:text-base mb-10 max-w-2xl mx-auto">
+>>>>>>> 7a676556799ba78fa8ba6a9f4b8ea540dfe29418
         Discover the services we offer to help you build, grow, and monetize
         your blog journey.
       </p>
@@ -84,7 +91,11 @@ export default function Services() {
           Contact Us
         </button>
       </div>
+<<<<<<< HEAD
 
+=======
+      
+>>>>>>> 7a676556799ba78fa8ba6a9f4b8ea540dfe29418
       <Modal isOpen={isOpen} onClose={closeModal} title="Service Inquiry">
         {/* This is a modal component using Tailwind CSS in Next.js. */}
       </Modal>
