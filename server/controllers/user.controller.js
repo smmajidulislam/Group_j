@@ -1,0 +1,153 @@
+const User = require('../models/user.model');
+const Post = require('../models/post.model');
+const Comment = require('../models/comment.model');
+
+// @desc    Get all users (admin only)
+// @route   GET /api/users
+// @access  Private/Admin
+exports.getUsers = async (req, res) => {
+    try {
+        const users = await User.find().select(
+            '-password -resetPasswordToken -resetPasswordExpire -verificationToken'
+        );
+
+        res.status(200).json({
+            users: users.map(user => ({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                isAdmin: user.isAdmin,
+                isVerified: user.isVerified,
+                createdAt: user.createdAt
+            }))
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Get user by ID
+// @route   GET /api/users/:id
+// @access  Private/Admin
+exports.getUserById = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id).select(
+            '-password -resetPasswordToken -resetPasswordExpire -verificationToken'
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            isAdmin: user.isAdmin,
+            isVerified: user.isVerified,
+            createdAt: user.createdAt
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Update user
+// @route   PUT /api/users/:id
+// @access  Private/Admin
+exports.updateUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Admins can update any user, users can only update themselves
+        if (req.params.id !== req.user._id.toString() && !req.user.isAdmin) {
+            return res.status(401).json({ message: 'Not authorized' });
+        }
+
+        // Update user fields
+        user.name = req.body.name || user.name;
+
+        // Admin can update isAdmin status
+        if (req.user.isAdmin) {
+            user.isAdmin =
+                req.body.isAdmin !== undefined
+                    ? req.body.isAdmin
+                    : user.isAdmin;
+        }
+
+        // If email is being changed
+        if (req.body.email && req.body.email !== user.email) {
+            // Check if new email already exists
+            const emailExists = await User.findOne({ email: req.body.email });
+            if (emailExists) {
+                return res
+                    .status(400)
+                    .json({ message: 'Email already in use' });
+            }
+            user.email = req.body.email;
+        }
+
+        // If password is being updated
+        if (req.body.password) {
+            user.password = req.body.password;
+        }
+
+        const updatedUser = await user.save();
+
+        res.status(200).json({
+            _id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            isAdmin: updatedUser.isAdmin,
+            isVerified: updatedUser.isVerified,
+            createdAt: updatedUser.createdAt
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Delete user
+// @route   DELETE /api/users/:id
+// @access  Private/Admin
+exports.deleteUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Only admin can delete users (or users can delete themselves)
+        if (req.params.id !== req.user._id.toString() && !req.user.isAdmin) {
+            return res.status(401).json({ message: 'Not authorized' });
+        }
+
+        // Delete user's posts
+        const userPosts = await Post.find({ author: user._id });
+        for (const post of userPosts) {
+            // Delete comments on this post
+            await Comment.deleteMany({ post: post._id });
+            // Delete post
+            await post.deleteOne();
+        }
+
+        // Delete user's comments
+        await Comment.deleteMany({ author: user._id });
+
+        // Delete user
+        await user.deleteOne();
+
+        res.status(200).json({ message: 'User removed' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};

@@ -8,29 +8,47 @@ export const authApi = createApi({
   endpoints: (builder) => ({
     login: builder.mutation({
       query: (data) => ({
-        url: "/login",
+        url: "/auth/login",
         method: "POST",
         body: data,
-        credentials: "include",
+      }),
+    }),
+    register: builder.mutation({
+      query: (data) => ({
+        url: "/auth/register",
+        method: "POST",
+        body: data,
+      }),
+    }),
+    verifyEmail: builder.query({
+      query: (data) => ({
+        url: `/auth/verify-email?token=${token}`,
+        method: "GET",
+        body: data,
+      }),
+    }),
+    forgotPassword: builder.mutation({
+      query: (data) => ({
+        url: "/auth/forgot-password",
+        method: "POST",
+        body: data,
+      }),
+    }),
+    resetPassword: builder.mutation({
+      query: (data) => ({
+        url: "/auth/reset-password",
+        method: "POST",
+        body: data,
       }),
     }),
     getUser: builder.query({
       query: (id) => ({
-        url: `/user/${id}`,
+        url: `/auth/me/${id}`,
         method: "GET",
-        credentials: "include",
-      }),
-    }),
-    singOut: builder.mutation({
-      query: () => ({
-        url: "/logout",
-        method: "POST",
-        credentials: "include",
       }),
     }),
   }),
 });
 
-export const { useLoginMutation, useSingOutMutation, useGetUserQuery } =
-  authApi;
+export const { useLoginMutation, useGetUserQuery } = authApi;
 export default authApi;
