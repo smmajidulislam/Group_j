@@ -48,10 +48,10 @@ export default function Services() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Page Title */}
-      <h1 className="text-3xl sm:text-4xl font-bold text-center mb-4">
+      <h1 className="text-3xl sm:text-4xl font-bold text-gray-200 text-center mb-4">
         Our Services
       </h1>
-      <p className="text-center text-gray-600 text-sm sm:text-base mb-10 max-w-2xl mx-auto">
+      <p className="text-center text-gray-400 text-sm sm:text-base mb-10 max-w-2xl mx-auto">
         Discover the services we offer to help you build, grow, and monetize
         your blog journey.
       </p>
