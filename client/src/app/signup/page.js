@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
+import { useRegisterMutation } from "../features/api/loginSlice/loginApiSlice";
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,32 +12,38 @@ export default function SignupPage() {
     watch,
     formState: { errors, isValid, isDirty },
   } = useForm({
-    mode: "onChange",  
+    mode: "onChange",
   });
+  const [
+    registerUser,
+    { data, isLoadingRegistration, isError, isSuccess, error },
+  ] = useRegisterMutation();
 
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      const { name, email, password, confirmPassword } = data;
-      console.log({ name, email, password, confirmPassword });
-      
+      // dispatch(registerUserRequest(data));
+      await registerUser(data).unwrap();
     } finally {
       setIsLoading(false);
     }
   };
 
-  
   const password = watch("password");
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-transparent px-4">
       <div className="max-w-md w-full bg-white shadow-md rounded-2xl p-6">
         <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
-        <p className="mb-6 text-gray-600">Enter your details to create a new account</p>
+        <p className="mb-6 text-gray-600">
+          Enter your details to create a new account
+        </p>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Name Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Full Name</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Full Name
+            </label>
             <input
               type="text"
               {...register("name", { required: "Full name is required" })}
@@ -47,9 +54,10 @@ export default function SignupPage() {
             )}
           </div>
 
-          
           <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Email
+            </label>
             <input
               type="email"
               {...register("email", {
@@ -62,12 +70,16 @@ export default function SignupPage() {
               className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
             />
             {errors.email && (
-              <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+              <p className="text-sm text-red-500 mt-1">
+                {errors.email.message}
+              </p>
             )}
           </div>
- 
+
           <div>
-            <label className="block text-sm font-medium text-gray-700">Password</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
             <input
               type="password"
               {...register("password", {
@@ -80,11 +92,12 @@ export default function SignupPage() {
               className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
             />
             {errors.password && (
-              <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
+              <p className="text-sm text-red-500 mt-1">
+                {errors.password.message}
+              </p>
             )}
           </div>
 
-           
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Confirm Password
@@ -105,7 +118,6 @@ export default function SignupPage() {
             )}
           </div>
 
-         
           <button
             type="submit"
             disabled={!isValid || isLoading}
