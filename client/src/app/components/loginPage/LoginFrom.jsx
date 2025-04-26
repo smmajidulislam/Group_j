@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/authContext/AuthContext";
 import { useLoginMutation } from "@/app/features/api/loginSlice/loginApiSlice";
+import Link from "next/link";
 
 const LoginFrom = () => {
   const [customError, setCustomError] = useState("");
@@ -95,6 +96,16 @@ const LoginFrom = () => {
             {isLoading ? "Logging in..." : "Login"}
           </button>
         </form>
+
+        <div className="mt-6 text-center text-sm text-gray-600">
+            <p>
+              Don't have a account?{' '}
+              <Link href="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
+                Signup
+              </Link>
+            </p>
+          </div>
+
       </div>
     </div>
   );
