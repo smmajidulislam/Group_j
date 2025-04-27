@@ -74,16 +74,14 @@ export default function Services() {
         ))}
       </div>
 
-      <div className="text-centerc flex items-center flex-col justify-center mt-12">
-        {/* You can open the modal using document.getElementById('ID').showModal() method */}
-        <div className="text-center flex items-center flex-col justify-center mt-12">
-          <button
-            onClick={openModal}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Contact Us
-          </button>
-        </div>
+      {/* Contact Us Button and Modal */}
+      <div className="text-center flex items-center flex-col justify-center mt-12">
+        <button
+          onClick={openModal}
+          className="bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition duration-300"
+        >
+          Contact Us
+        </button>
         <Modal isOpen={isOpen} onClose={closeModal} title="Service Inquiry">
           {/* This is a modal component using Tailwind CSS in Next.js. */}
         </Modal>
