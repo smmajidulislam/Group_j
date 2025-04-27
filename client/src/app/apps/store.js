@@ -3,7 +3,6 @@ import authApi from "../features/api/loginSlice/loginApiSlice";
 import commentApi from "../features/api/commentSlice/commentSlice";
 import postApi from "../features/api/postSlice/postSlice";
 import userApi from "../features/api/userSlice/userSlice";
-import registerSlice from "../features/Slice/loginSlice/loginSlice";
 
 const store = configureStore({
   reducer: {
@@ -11,7 +10,6 @@ const store = configureStore({
     [commentApi.reducerPath]: commentApi.reducer,
     [postApi.reducerPath]: postApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
-    registerUser: registerSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()

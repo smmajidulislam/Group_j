@@ -5,7 +5,7 @@ import { useAuth } from "../contexts/authContext/AuthContext";
 
 const Nav = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, isLoading, singOutUser, logout } = useAuth();
+  const { user, isLoading, logout } = useAuth();
 
   const renderSkeleton = () => (
     <div className="hidden md:flex space-x-4 animate-pulse">

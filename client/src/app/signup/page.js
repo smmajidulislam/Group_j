@@ -1,8 +1,9 @@
 "use client";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRegisterMutation } from "../features/api/loginSlice/loginApiSlice";
+import { toast } from "react-toastify";
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,26 +11,46 @@ export default function SignupPage() {
     register,
     handleSubmit,
     watch,
-    formState: { errors, isValid, isDirty },
-  } = useForm({
-    mode: "onChange",
-  });
+    reset,
+    formState: { errors, isValid },
+  } = useForm({ mode: "onChange" });
+
   const [
     registerUser,
-    { data, isLoadingRegistration, isError, isSuccess, error },
+    { data, isLoading: isLoadingRegistration, isError, isSuccess, error },
   ] = useRegisterMutation();
 
-  const onSubmit = async (data) => {
+  const password = watch("password");
+
+  const onSubmit = async (formData) => {
     setIsLoading(true);
     try {
-      // dispatch(registerUserRequest(data));
-      await registerUser(data).unwrap();
+      await registerUser(formData).unwrap();
+    } catch (err) {
+      console.error("Registration failed:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const password = watch("password");
+  // Handle success and error feedback
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success(data?.message, {
+        position: "top-right",
+        autoClose: 1500,
+        theme: "colored",
+      });
+      reset();
+    }
+    if (isError) {
+      if (error?.data?.message) {
+        toast.error(error.data.message);
+      } else {
+        toast.error("Something went wrong. Please try again later.");
+      }
+    }
+  }, [isSuccess, isError, error, reset, data]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-transparent px-4">
@@ -38,8 +59,9 @@ export default function SignupPage() {
         <p className="mb-6 text-gray-600">
           Enter your details to create a new account
         </p>
+
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Name Field */}
+          {/* Full Name Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Full Name
@@ -54,6 +76,7 @@ export default function SignupPage() {
             )}
           </div>
 
+          {/* Email Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Email
@@ -76,6 +99,7 @@ export default function SignupPage() {
             )}
           </div>
 
+          {/* Password Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Password
@@ -98,6 +122,7 @@ export default function SignupPage() {
             )}
           </div>
 
+          {/* Confirm Password Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Confirm Password
@@ -118,16 +143,19 @@ export default function SignupPage() {
             )}
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
-            disabled={!isValid || isLoading}
+            disabled={!isValid || isLoading || isLoadingRegistration}
             className={`w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition-all ${
-              !isValid || isLoading
+              !isValid || isLoading || isLoadingRegistration
                 ? "opacity-50 cursor-not-allowed"
                 : "hover:bg-blue-700"
             }`}
           >
-            {isLoading ? "Creating Account..." : "Create Account"}
+            {isLoading || isLoadingRegistration
+              ? "Creating Account..."
+              : "Create Account"}
           </button>
         </form>
 
