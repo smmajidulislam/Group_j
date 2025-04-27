@@ -7,13 +7,11 @@ import { useRouter } from "next/navigation";
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-<<<<<<< HEAD
+
   const router = useRouter();
 
-=======
-  const [singOut] = useSingOutMutation();
+  // const [singOut] = useSingOutMutation();
  
->>>>>>> 7a676556799ba78fa8ba6a9f4b8ea540dfe29418
   useEffect(() => {
     const userData = Cookies.get("user");
     if (userData) {
