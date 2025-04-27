@@ -68,14 +68,14 @@ const Nav = () => {
                   Dashboard
                 </Link>
               )}
-              {user?.user?.isAdmin === true && (
+              {/* {user?.user?.isAdmin === true && ( */}
                 <Link
                   href="/admindashbord"
                   className="hover:bg-gray-700 px-3 py-2 rounded"
                 >
                   Admin Dashboard
                 </Link>
-              )}
+              {/* )} */}
               {user && (
                 <button
                   className="hover:bg-gray-700 px-3 py-2 rounded"
