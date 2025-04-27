@@ -6,19 +6,20 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/authContext/AuthContext";
 import { useLoginMutation } from "@/app/features/api/loginSlice/loginApiSlice";
 import Link from "next/link";
+import { toast } from "react-toastify"; // 👉 toast import
 
-const LoginFrom = () => {
-  const [customError, setCustomError] = useState("");
+const LoginForm = () => {
   const { setUser } = useAuth();
   const navigate = useRouter();
   const [login, { isLoading }] = useLoginMutation();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
+
   const onSubmit = async (data) => {
-    setCustomError("");
     try {
       const res = await login({
         email: data.email,
@@ -28,15 +29,17 @@ const LoginFrom = () => {
         expires: new Date(res.expire),
       });
       setUser(res);
+      toast.success("Login successful! 🎉"); // 👉 Success toast
       navigate.push("/");
     } catch (err) {
       if (err?.data?.error) {
-        setCustomError(err.data.error);
+        toast.error(err.data.error); // 👉 Error toast
       } else {
-        setCustomError("Something went wrong. Please try again.");
+        toast.error("Something went wrong. Please try again."); // 👉 Default error toast
       }
     }
   };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-transparent px-4">
       <div className="max-w-md w-full bg-white shadow-md rounded-2xl p-6">
@@ -44,6 +47,7 @@ const LoginFrom = () => {
           Login
         </h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Email Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Email
@@ -66,6 +70,7 @@ const LoginFrom = () => {
             )}
           </div>
 
+          {/* Password Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Password
@@ -82,10 +87,7 @@ const LoginFrom = () => {
             )}
           </div>
 
-          {customError && (
-            <p className="text-sm text-red-500 mt-1">{customError}</p>
-          )}
-
+          {/* Submit Button */}
           <button
             type="submit"
             className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition-all ${
@@ -97,18 +99,21 @@ const LoginFrom = () => {
           </button>
         </form>
 
+        {/* Link to Signup */}
         <div className="mt-6 text-center text-sm text-gray-600">
-            <p>
-              Don't have a account?{' '}
-              <Link href="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Signup
-              </Link>
-            </p>
-          </div>
-
+          <p>
+            Don't have an account?{" "}
+            <Link
+              href="/signup"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              Signup
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
 };
 
-export default LoginFrom;
+export default LoginForm;
