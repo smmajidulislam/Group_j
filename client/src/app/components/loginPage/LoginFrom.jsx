@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import jsCookies from "js-cookie";
+
+import Cookies from "js-cookie";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/authContext/AuthContext";
@@ -25,7 +25,7 @@ const LoginForm = () => {
         email: data.email,
         password: data.password,
       }).unwrap();
-      jsCookies.set("user", JSON.stringify(res), {
+      Cookies.set("user", JSON.stringify(res), {
         expires: new Date(res.expire),
       });
       setUser(res);
