@@ -2,16 +2,26 @@ const User = require('../models/user.model');
 const Post = require('../models/post.model');
 const Comment = require('../models/comment.model');
 
-// @desc    Get all users (admin only)
-// @route   GET /api/users
+// @desc    Get all users (admin only) with pagination
+// @route   GET /api/users?page=1&limit=10
 // @access  Private/Admin
 exports.getUsers = async (req, res) => {
-    console.log('admin getUsers == >', req.user);
+    console.log('admin getUsers ==>', req.user);
 
     try {
-        const users = await User.find().select(
-            '-password -resetPasswordToken -resetPasswordExpire -verificationToken'
-        );
+        const page = Number(req.query.page) || 1; // default page 1
+        const limit = Number(req.query.limit) || 5; // default limit 5
+        const skip = (page - 1) * limit;
+
+        const totalUsers = await User.countDocuments(); // total number of users
+
+        const users = await User.find()
+            .select(
+                '-password -resetPasswordToken -resetPasswordExpire -verificationToken'
+            )
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 }); // optional: latest users first
 
         res.status(200).json({
             users: users.map(user => ({
@@ -21,7 +31,10 @@ exports.getUsers = async (req, res) => {
                 isAdmin: user.isAdmin,
                 isVerified: user.isVerified,
                 createdAt: user.createdAt
-            }))
+            })),
+            page,
+            pages: Math.ceil(totalUsers / limit),
+            totalUsers
         });
     } catch (error) {
         console.error(error);
