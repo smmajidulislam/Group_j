@@ -6,18 +6,15 @@ import {
 import React, { useState } from "react";
 
 export default function UserManegment() {
-  const { data, error, isLoading } = useGetUsersQuery();
-  const [
-    deleteUser,
-    {
-      isLoading: deleteUserLoading,
-      isSuccess: deleteUserSuccess,
-      error: deleteUserError,
-    },
-  ] = useDeleteUserMutation();
-
+  const [currentPage, setCurrentPage] = useState(1);
   const [deletionStatus, setDeletionStatus] = useState({}); // To track deletion status for each user
-
+  const { data, error, isLoading } = useGetUsersQuery(currentPage);
+  const [deleteUser] = useDeleteUserMutation();
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+  const isNextDisabled = currentPage === data?.pages;
+  const isPrevDisabled = currentPage === 1;
   const handleDeleteUser = async (id) => {
     try {
       // Set the deletion status to loading for the specific user
@@ -37,6 +34,7 @@ export default function UserManegment() {
       console.error("Error deleting user:", err);
     }
   };
+  console.log(data);
   // Handling loading and error states
   if (isLoading) {
     return <p className="text-center mt-10">Loading users...</p>;
@@ -118,17 +116,39 @@ export default function UserManegment() {
         </table>
       </div>
 
-      <div className="flex justify-center mt-6 space-x-2">
-        <button className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-md">
+      <div className="flex justify-center mt-3 space-x-2">
+        <button
+          className={`px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-md ${
+            isPrevDisabled ? "cursor-not-allowed" : ""
+          }`}
+          onClick={() => !isPrevDisabled && handlePageChange(currentPage - 1)}
+          disabled={isPrevDisabled}
+        >
           Prev
         </button>
-        <button className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
-          1
-        </button>
-        <button className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-md">
-          2
-        </button>
-        <button className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-md">
+
+        {Array.from({ length: data?.pages }).map((_, index) => {
+          const page = index + 1;
+          return (
+            <button
+              key={page}
+              className={`px-3 py-1 rounded-md ${
+                page === currentPage ? "bg-blue-600" : "bg-blue-500"
+              } hover:bg-blue-700`}
+              onClick={() => handlePageChange(page)}
+            >
+              {page}
+            </button>
+          );
+        })}
+
+        <button
+          className={`px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-md ${
+            isNextDisabled ? "cursor-not-allowed" : ""
+          }`}
+          onClick={() => !isNextDisabled && handlePageChange(currentPage + 1)}
+          disabled={isNextDisabled}
+        >
           Next
         </button>
       </div>
