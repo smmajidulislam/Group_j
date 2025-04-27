@@ -17,13 +17,18 @@ const postSchema = new mongoose.Schema(
             required: true
         },
         imageUrl: {
-            type: String
+            type: String,
+            default: ''
         },
         likes: {
             type: Number,
             default: 0
         },
         dislikes: {
+            type: Number,
+            default: 0
+        },
+        commentsCount: {
             type: Number,
             default: 0
         },

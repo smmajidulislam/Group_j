@@ -1,6 +1,41 @@
 const Post = require('../models/post.model');
 const User = require('../models/user.model');
 const Comment = require('../models/comment.model');
+const { uploadImage, deleteImage } = require('../utils/cloudinary');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const tempDir = path.join(process.cwd(), 'temp');
+        if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+        }
+        cb(null, tempDir);
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+    }
+});
+
+const upload = multer({
+    storage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 5MB
+    fileFilter: (req, file, cb) => {
+        const filetypes = /jpeg|jpg|png|gif/;
+        const mimetype = filetypes.test(file.mimetype);
+        const extname = filetypes.test(
+            path.extname(file.originalname).toLowerCase()
+        );
+
+        if (mimetype && extname) {
+            return cb(null, true);
+        }
+        cb(new Error('Only image files are allowed!'));
+    }
+});
 
 // @desc    Get all posts
 // @route   GET /api/posts
@@ -81,26 +116,19 @@ exports.getPostById = async (req, res) => {
 // @access  Private
 exports.createPost = async (req, res) => {
     try {
-        const { title, content } = req.body;
-
-        // Add image URL if file was uploaded
-        const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+        const { title, content, imageUrl } = req.body;
 
         const post = await Post.create({
             title,
             content,
             author: req.user?._id,
-            imageUrl
+            imageUrl // ✅ Save Cloudinary URL here
         });
-
-        console.log('post  == >', post);
 
         const populatedPost = await Post.findById(post._id).populate(
             'author',
             'name'
         );
-
-        console.log('populated  == >', populatedPost);
 
         res.status(201).json({
             _id: populatedPost._id,
@@ -117,7 +145,7 @@ exports.createPost = async (req, res) => {
             imageUrl: populatedPost?.imageUrl
         });
     } catch (error) {
-        console.error(error);
+        console.error('Create post error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -141,15 +169,15 @@ exports.updatePost = async (req, res) => {
             return res.status(401).json({ message: 'Not authorized' });
         }
 
-        const { title, content } = req.body;
+        const { title, content, imageUrl } = req.body;
 
         // Update fields
         post.title = title || post.title;
         post.content = content || post.content;
 
-        // Update image if file was uploaded
-        if (req.file) {
-            post.imageUrl = `/uploads/${req.file.filename}`;
+        // 👉 Update image if new imageUrl is provided
+        if (imageUrl) {
+            post.imageUrl = imageUrl;
         }
 
         const updatedPost = await post.save();

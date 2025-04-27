@@ -6,6 +6,8 @@ const Comment = require('../models/comment.model');
 // @route   GET /api/users
 // @access  Private/Admin
 exports.getUsers = async (req, res) => {
+    console.log('admin getUsers == >', req.user);
+
     try {
         const users = await User.find().select(
             '-password -resetPasswordToken -resetPasswordExpire -verificationToken'
@@ -36,6 +38,8 @@ exports.getUserById = async (req, res) => {
             '-password -resetPasswordToken -resetPasswordExpire -verificationToken'
         );
 
+        console.log('user.controller.js user == >', user);
+
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -44,6 +48,7 @@ exports.getUserById = async (req, res) => {
             _id: user._id,
             name: user.name,
             email: user.email,
+            profileImage: user.profileImage,
             isAdmin: user.isAdmin,
             isVerified: user.isVerified,
             createdAt: user.createdAt
@@ -72,6 +77,11 @@ exports.updateUser = async (req, res) => {
 
         // Update user fields
         user.name = req.body.name || user.name;
+
+        // Update profileImage if provided
+        if (req.body.profileImage) {
+            user.profileImage = req.body.profileImage;
+        }
 
         // Admin can update isAdmin status
         if (req.user.isAdmin) {
@@ -104,6 +114,7 @@ exports.updateUser = async (req, res) => {
             _id: updatedUser._id,
             name: updatedUser.name,
             email: updatedUser.email,
+            profileImage: updatedUser.profileImage,
             isAdmin: updatedUser.isAdmin,
             isVerified: updatedUser.isVerified,
             createdAt: updatedUser.createdAt
