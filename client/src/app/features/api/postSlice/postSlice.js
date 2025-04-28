@@ -1,77 +1,89 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import Cookies from "js-cookie";
 
+// Define the API
 export const postApi = createApi({
   reducerPath: "postApi",
-  baseQuery: fetchBaseQuery({ baseUrl: `${process.env.NEXT_PUBLIC_BASE_URL}` }),
+  baseQuery: fetchBaseQuery({
+    baseUrl: `${process.env.NEXT_PUBLIC_BASE_URL}`, // Base URL for API
+    prepareHeaders: (headers) => {
+      const userCookie = Cookies.get("user");
+      if (userCookie) {
+        try {
+          const userData = JSON.parse(userCookie);
+          if (userData?.token) {
+            headers.set("authorization", `Bearer ${userData.token}`);
+          }
+        } catch (error) {
+          console.error("Error parsing user cookie:", error);
+        }
+      }
+      return headers;
+    },
+  }),
+  tagTypes: ["Post"], // Tag types for invalidating cache
   endpoints: (builder) => ({
-    // Fetch all posts
     getPosts: builder.query({
       query: (page) => `/posts?page=${page}`,
+      providesTags: (result, error, page) =>
+        result ? [{ type: "Post", id: "ALL" }] : [], // Use "ALL" to invalidate all posts
     }),
 
-    // Search posts
-    searchPosts: builder.query({
-      query: (searchTerm) => `/posts/search?query=${searchTerm}`,
-    }),
-
-    // Fetch posts by user ID
-    getPostsByUser: builder.query({
-      query: (userId) => `/posts/user/${userId}`,
-    }),
-
-    // Fetch post by ID
     getPostById: builder.query({
       query: (id) => `/posts/${id}`,
+      providesTags: (result) =>
+        result ? [{ type: "Post", id: result._id }] : [],
     }),
 
-    // Create a new post (protected)
     createPost: builder.mutation({
       query: (postData) => ({
         url: "/posts",
         method: "POST",
         body: postData,
       }),
+      invalidatesTags: ["Post"], // Invalidate all posts after creating a post
     }),
 
-    // Update a post (protected)
     updatePost: builder.mutation({
-      query: ({ id, postData }) => ({
+      query: ({ id, ...data }) => ({
         url: `/posts/${id}`,
         method: "PUT",
-        body: postData,
+        body: data,
       }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Post", id }, // Invalidating specific post cache
+        { type: "Post", id: "ALL" }, // Invalidate all posts cache to refetch
+      ],
     }),
 
-    // Delete a post (protected)
     deletePost: builder.mutation({
       query: (id) => ({
         url: `/posts/${id}`,
         method: "DELETE",
       }),
+      invalidatesTags: (result, error, id) => [{ type: "Post", id }],
     }),
 
-    // Like a post (protected)
     likePost: builder.mutation({
       query: (id) => ({
         url: `/posts/${id}/like`,
         method: "PUT",
       }),
+      invalidatesTags: (result, error, { id }) => [{ type: "Post", id }],
     }),
 
-    // Dislike a post (protected)
     dislikePost: builder.mutation({
       query: (id) => ({
         url: `/posts/${id}/dislike`,
         method: "PUT",
       }),
+      invalidatesTags: (result, error, { id }) => [{ type: "Post", id }],
     }),
   }),
 });
 
 export const {
   useGetPostsQuery,
-  useSearchPostsQuery,
-  useGetPostsByUserQuery,
   useGetPostByIdQuery,
   useCreatePostMutation,
   useUpdatePostMutation,
