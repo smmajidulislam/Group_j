@@ -60,14 +60,14 @@ const Nav = () => {
               >
                 About Us
               </Link>
-              {user?.user?.isAdmin === false && (
+              {/* {user?.user?.isAdmin === false && ( */}
                 <Link
                   href="/dashbord"
                   className="hover:bg-gray-700 px-3 py-2 rounded"
                 >
                   Dashboard
                 </Link>
-              )}
+              {/* )} */}
               {user?.user?.isAdmin === true && (
                 <Link
                   href="/admindashbord"

@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState();
+  const [user, setUser] = useState({
+    role:"user"
+  });
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -17,6 +19,7 @@ export const AuthProvider = ({ children }) => {
     }
     setIsLoading(false);
   }, []);
+  
   const logout = () => {
     Cookies.remove("user");
     setUser(null);
