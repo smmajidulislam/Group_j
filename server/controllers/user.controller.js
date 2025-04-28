@@ -154,6 +154,19 @@ exports.deleteUser = async (req, res) => {
             return res.status(401).json({ message: 'Not authorized' });
         }
 
+        // Check if the user to be deleted is an admin
+        if (user.isAdmin) {
+            // Count the number of admins in the system
+            const adminCount = await User.countDocuments({ isAdmin: true });
+
+            // If there is more than one admin, prevent deletion of another admin
+            if (adminCount > 1) {
+                return res
+                    .status(403)
+                    .json({ message: 'Cannot delete another admin' });
+            }
+        }
+
         // Delete user's posts
         const userPosts = await Post.find({ author: user._id });
         for (const post of userPosts) {
