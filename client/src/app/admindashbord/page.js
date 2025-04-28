@@ -28,7 +28,7 @@ export default function Page() {
         </button>
       </div>
 
-      {/* Content */}
+      
       {tab === "user" && <UserManegment />}
 
       {tab === "post" && (
