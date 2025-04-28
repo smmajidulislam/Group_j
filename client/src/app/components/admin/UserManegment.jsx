@@ -2,31 +2,32 @@
 import {
   useDeleteUserMutation,
   useGetUsersQuery,
+  useUpdateUserMutation,
 } from "@/app/features/api/userSlice/userSlice";
-import React, { useState } from "react";
+import { useState } from "react";
 
-export default function UserManegment() {
+export default function UserManagement() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [deletionStatus, setDeletionStatus] = useState({}); // To track deletion status for each user
+  const [deletionStatus, setDeletionStatus] = useState({});
+  const [editMode, setEditMode] = useState({});
+  const [editData, setEditData] = useState({});
   const { data, error, isLoading } = useGetUsersQuery(currentPage);
   const [deleteUser] = useDeleteUserMutation();
+  const [updateUser] = useUpdateUserMutation();
+
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
+
   const isNextDisabled = currentPage === data?.pages;
   const isPrevDisabled = currentPage === 1;
+
   const handleDeleteUser = async (id) => {
     try {
-      // Set the deletion status to loading for the specific user
       setDeletionStatus((prevState) => ({ ...prevState, [id]: "loading" }));
-
       const res = await deleteUser(id).unwrap();
-
-      // Update the deletion status for the user as 'success'
       setDeletionStatus((prevState) => ({ ...prevState, [id]: "success" }));
-      console.log("User deleted successfully:", res);
     } catch (err) {
-      // If error occurs, update the deletion status to 'error'
       setDeletionStatus((prevState) => ({
         ...prevState,
         [id]: `error: ${err.message}`,
@@ -34,8 +35,29 @@ export default function UserManegment() {
       console.error("Error deleting user:", err);
     }
   };
-  console.log(data);
-  // Handling loading and error states
+
+  const handleEditClick = (user) => {
+    setEditMode((prevState) => ({ ...prevState, [user._id]: true }));
+    setEditData({ name: user.name, isAdmin: user.isAdmin });
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditData((prev) => ({
+      ...prev,
+      [name]: name === "isAdmin" ? value === "true" : value,
+    }));
+  };
+
+  const handleEditSave = async (id) => {
+    try {
+      const res = await updateUser({ id, ...editData }).unwrap();
+      setEditMode((prevState) => ({ ...prevState, [id]: false }));
+    } catch (err) {
+      console.error("Error updating user:", err);
+    }
+  };
+
   if (isLoading) {
     return <p className="text-center mt-10">Loading users...</p>;
   }
@@ -67,19 +89,41 @@ export default function UserManegment() {
                   <div className="bg-gray-300 text-gray-700 rounded-full w-8 h-8 flex items-center justify-center font-bold">
                     {user?.name?.charAt(0)}
                   </div>
-                  {user?.name}
+                  {editMode[user._id] ? (
+                    <input
+                      type="text"
+                      name="name"
+                      value={editData.name}
+                      onChange={handleEditChange}
+                      className="border px-2 py-1 rounded-md"
+                    />
+                  ) : (
+                    user?.name
+                  )}
                 </td>
                 <td className="py-3 px-4">{user?.email}</td>
                 <td className="py-3 px-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      user?.isAdmin === true
-                        ? "bg-red-200 text-red-800"
-                        : "bg-blue-200 text-blue-800"
-                    }`}
-                  >
-                    {user?.isAdmin === true ? "Admin" : "User"}
-                  </span>
+                  {editMode[user._id] ? (
+                    <select
+                      name="isAdmin"
+                      value={editData?.isAdmin}
+                      onChange={handleEditChange}
+                      className="border px-2 py-1 rounded-md"
+                    >
+                      <option value="true">Admin</option>
+                      <option value="false">User</option>
+                    </select>
+                  ) : (
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        user?.isAdmin
+                          ? "bg-red-200 text-red-800"
+                          : "bg-blue-200 text-blue-800"
+                      }`}
+                    >
+                      {user?.isAdmin ? "Admin" : "User"}
+                    </span>
+                  )}
                 </td>
                 <td className="py-3 px-4 text-center">
                   {user?.createdAt &&
@@ -89,16 +133,46 @@ export default function UserManegment() {
                       day: "numeric",
                     })}
                 </td>
-                <td className="py-3 px-4 text-center">
-                  <button
-                    onClick={() => handleDeleteUser(user?._id)}
-                    className="bg-red-100 hover:bg-red-200 text-red-600 p-2 rounded-md"
-                    disabled={deletionStatus[user?._id] === "loading"}
-                  >
-                    {deletionStatus[user?._id] === "loading"
-                      ? "Deleting..."
-                      : "🗑️"}
-                  </button>
+                <td className="py-3 px-4 text-center flex flex-col md:flex-row items-center justify-center gap-2">
+                  {editMode[user?._id] ? (
+                    <>
+                      <button
+                        onClick={() => handleEditSave(user?._id)}
+                        className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-md"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() =>
+                          setEditMode((prevState) => ({
+                            ...prevState,
+                            [user._id]: false,
+                          }))
+                        }
+                        className="bg-gray-400 hover:bg-gray-500 text-white p-2 rounded-md"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleEditClick(user)}
+                        className="bg-blue-100 hover:bg-blue-200 text-blue-600 p-2 rounded-md"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user?._id)}
+                        className="bg-red-100 hover:bg-red-200 text-red-600 p-2 rounded-md"
+                        disabled={deletionStatus[user?._id] === "loading"}
+                      >
+                        {deletionStatus[user?._id] === "loading"
+                          ? "Deleting..."
+                          : "🗑️"}
+                      </button>
+                    </>
+                  )}
                   {deletionStatus[user?._id] === "success" && (
                     <div className="text-green-500">
                       User successfully deleted!
