@@ -1,16 +1,25 @@
 "use client";
 import { useAuth } from "@/app/contexts/authContext/AuthContext";
+import { useUploadImageMutation } from "@/app/features/api/imageuoloadoncloud/img";
 import { useUpdateUserMutation } from "@/app/features/api/userSlice/userSlice";
-import toBase64 from "@/utils/toBase64";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 
 export default function UserModal({ setIsModalOpen, onPrvImage }) {
   const [previewImage, setPreviewImage] = useState("");
-  const [image, setImage] = useState(null);
+  const [image, setImage] = useState("");
   const [updateUser, { isLoading, isSuccess, isError, error }] =
     useUpdateUserMutation();
+  const [
+    imageUpload,
+    {
+      isLoading: isLoadingImage,
+      isSuccess: isSuccessImage,
+      isError: isErrorImage,
+      error: errorImage,
+    },
+  ] = useUploadImageMutation();
   const { register, handleSubmit, reset } = useForm();
   const { user } = useAuth();
   const userId = user?.user?._id;
@@ -24,32 +33,31 @@ export default function UserModal({ setIsModalOpen, onPrvImage }) {
   }, [isSuccess, reset, setIsModalOpen]);
 
   // Image preview
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
       setImage(file);
       const imageUrl = URL.createObjectURL(file);
       setPreviewImage(imageUrl);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "Practis");
+      try {
+        const res = await imageUpload(formData).unwrap();
+        setImage(res?.secure_url);
+      } catch (err) {
+        console.error("Image upload failed:", err);
+      }
     }
   };
 
   // Form submit
   const onSubmit = async (data) => {
-    let base64Image = null;
-
-    if (image) {
-      try {
-        base64Image = await toBase64(image);
-      } catch (error) {
-        console.error("Base64 conversion error:", error);
-      }
-    }
-
     const updatedData = {
       name: data.name,
       email: data.email,
       password: data.password,
-      ...(base64Image && { profileImage: base64Image }), // base64 img
+      profileImage: image,
       previouesImage: onPrvImage,
     };
 

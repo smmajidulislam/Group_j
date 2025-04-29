@@ -1,6 +1,5 @@
 const page = ({ searchParams }) => {
   const id = searchParams.id;
-  console.log(id);
   return (
     <div>
       <>
