@@ -53,10 +53,10 @@ export const userApi = createApi({
         method: "PUT",
         body: userData,
       }),
-      // Invalidates the cached list of users so it refetches after an update
-      invalidatesTags: [
+      // Invalidates the cached user and users list after updating
+      invalidatesTags: (result, error, { id }) => [
         { type: "User", id: "LIST" },
-        { type: "User", id: "USER" },
+        { type: "User", id }, // invalidate specific user cache
       ],
     }),
 
@@ -66,7 +66,7 @@ export const userApi = createApi({
         url: `/users/${id}`,
         method: "DELETE",
       }),
-      // Invalidates the cached list of users so it refetches after a deletion
+      // Invalidates the cached list of users after deletion
       invalidatesTags: [{ type: "User", id: "LIST" }],
     }),
   }),

@@ -1,5 +1,7 @@
+"use client";
 import { useAuth } from "@/app/contexts/authContext/AuthContext";
 import { useUpdateUserMutation } from "@/app/features/api/userSlice/userSlice";
+import toBase64 from "@/utils/toBase64";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -13,16 +15,15 @@ export default function UserModal({ setIsModalOpen, onPrvImage }) {
   const { user } = useAuth();
   const userId = user?.user?._id;
 
-  // Success হলে modal বন্ধ করে ফেলা এবং ফর্ম reset করা
+  // Success হলে modal বন্ধ ও ফর্ম reset
   useEffect(() => {
     if (isSuccess) {
-      alert("Profile updated successfully!");
       setIsModalOpen(false);
-      reset(); // Reset form values
+      reset();
     }
   }, [isSuccess, reset, setIsModalOpen]);
 
-  // Image change handler
+  // Image preview
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -32,13 +33,23 @@ export default function UserModal({ setIsModalOpen, onPrvImage }) {
     }
   };
 
-  // Submit handler
+  // Form submit
   const onSubmit = async (data) => {
+    let base64Image = null;
+
+    if (image) {
+      try {
+        base64Image = await toBase64(image);
+      } catch (error) {
+        console.error("Base64 conversion error:", error);
+      }
+    }
+
     const updatedData = {
       name: data.name,
       email: data.email,
       password: data.password,
-      ...(image && { profileImage: image }),
+      ...(base64Image && { profileImage: base64Image }), // base64 img
       previouesImage: onPrvImage,
     };
 
@@ -54,7 +65,7 @@ export default function UserModal({ setIsModalOpen, onPrvImage }) {
       <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-md">
         <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
 
-        {/* Error Message */}
+        {/* Error */}
         {isError && (
           <p className="text-red-500 text-sm mb-2">
             {error?.data?.message || "Something went wrong!"}
@@ -83,7 +94,6 @@ export default function UserModal({ setIsModalOpen, onPrvImage }) {
             />
           </div>
 
-          {/* Preview */}
           {previewImage && (
             <div className="flex justify-center mb-4">
               <div className="relative w-24 h-24">
@@ -97,7 +107,6 @@ export default function UserModal({ setIsModalOpen, onPrvImage }) {
             </div>
           )}
 
-          {/* Button Group */}
           <div className="flex justify-end gap-4 mt-6">
             <button
               type="button"
