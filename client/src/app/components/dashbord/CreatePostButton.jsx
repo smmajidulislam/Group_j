@@ -29,10 +29,6 @@ export default function CreatePostButton() {
     if (image) {
       formData.append("image", image);
     }
-
-    // for (let data of formData.entries()) {
-    //   console.log(data[0] + ": ", data[1]);
-    // }
   };
 
   return (
@@ -60,7 +56,9 @@ export default function CreatePostButton() {
                     {...register("title", { required: true })}
                     className="w-full border rounded p-2 mt-1"
                   />
-                 {errors.title && <p className="text-red-500 text-sm">Title is required.</p>}
+                  {errors.title && (
+                    <p className="text-red-500 text-sm">Title is required.</p>
+                  )}
                 </div>
 
                 <div>
@@ -70,16 +68,15 @@ export default function CreatePostButton() {
                   <textarea
                     {...register("content", {
                       required: true,
-                       
                     })}
                     rows="6"
                     className="w-full border p-2 rounded"
                   ></textarea>
-                   {errors.content && (
+                  {errors.content && (
                     <p className="text-sm text-red-500 mt-1">
-                    Content is required
-                  </p>
-                   )}
+                      Content is required
+                    </p>
+                  )}
                 </div>
 
                 <div>
