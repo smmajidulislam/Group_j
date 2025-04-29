@@ -154,6 +154,9 @@ exports.getPostById = async (req, res) => {
             return res.status(404).json({ message: 'Post not found' });
         }
 
+        // Count the total number of comments for the post
+        const commentsCount = await Comment.countDocuments({ post: post._id });
+
         res.status(200).json({
             _id: post._id,
             title: post.title,
@@ -166,7 +169,8 @@ exports.getPostById = async (req, res) => {
             updatedAt: post.updatedAt,
             likes: post.likes,
             dislikes: post.dislikes,
-            imageUrl: post.imageUrl
+            imageUrl: post.imageUrl,
+            commentsCount // Include the total number of comments
         });
     } catch (error) {
         console.error(error);
@@ -333,6 +337,14 @@ exports.likePost = async (req, res) => {
     console.log('req.user == >', req.user);
     console.log('req.params == >', req.params);
     try {
+        // Check if the user is suspended
+        const user = await User.findById(req.user?._id);
+        if (!user || user.isSuspended) {
+            return res.status(403).json({
+                message: 'Suspended users cannot like posts.'
+            });
+        }
+
         const post = await Post.findById(req.params?.id);
 
         console.log('post like == >', post);
@@ -387,6 +399,14 @@ exports.likePost = async (req, res) => {
 // @access  Private
 exports.dislikePost = async (req, res) => {
     try {
+        // Check if the user is suspended
+        const user = await User.findById(req.user?._id);
+        if (!user || user.isSuspended) {
+            return res.status(403).json({
+                message: 'Suspended users cannot dislike posts.'
+            });
+        }
+
         const post = await Post.findById(req.params.id);
 
         if (!post) {
