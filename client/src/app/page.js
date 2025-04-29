@@ -1,9 +1,19 @@
-"use client";
+// "use client";
 
-export default function Page() {
+import FeaturedBlogPosts from "./components/Home/FeaturedBlogPosts";
+import HeroSection from "./components/Home/HeroSection";
+import NewsLetter from "./components/Home/NewsLetter";
+import PopularPosts from "./components/Home/PopularPosts";
+import TrendingPosts from "./components/Home/TrendingPosts";
+
+export default function Home() {
   return (
-    <>
-      <h1>hello</h1>
-    </>
+    <div>
+       <HeroSection/>
+       <FeaturedBlogPosts/>
+       <TrendingPosts/>
+       <PopularPosts/>
+       <NewsLetter />
+    </div>
   );
 }
