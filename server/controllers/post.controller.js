@@ -40,21 +40,84 @@ const upload = multer({
 // @desc    Get all posts
 // @route   GET /api/posts
 // @access  Public
+// exports.getPosts = async (req, res) => {
+//     try {
+//         const pageSize = 10;
+//         const page = Number(req.query.page) || 1;
+
+//         const count = await Post.countDocuments();
+
+//         const posts = await Post.find()
+//             .populate('author', 'name')
+//             .sort({ createdAt: -1 })
+//             .limit(pageSize)
+//             .skip(pageSize * (page - 1));
+
+//         console.log('post.controller.js getPosts ==>', posts);
+
+//         res.status(200).json({
+//             posts: posts.map(post => ({
+//                 _id: post._id,
+//                 title: post.title,
+//                 content: post.content,
+//                 author: {
+//                     _id: post.author?._id,
+//                     name: post.author?.name
+//                 },
+//                 createdAt: post.createdAt,
+//                 updatedAt: post.updatedAt,
+//                 likes: post.likes,
+//                 dislikes: post.dislikes,
+//                 imageUrl: post.imageUrl
+//             })),
+//             page,
+//             pages: Math.ceil(count / pageSize)
+//         });
+
+//         // Get all posts and populate author
+//         const post = await Post.find()
+//             .populate({
+//                 path: 'author',
+//                 select: 'name email isAdmin isSuspended'
+//             })
+//             .sort({ createdAt: -1 });
+
+//         // Filter out posts from suspended users
+//         const visiblePosts = post.filter(pst => !pst.author.isSuspended);
+
+//         res.status(200).json(visiblePosts);
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ message: 'Server error' });
+//     }
+// };
+
+// new code where suspended user's posts are not shown===================
+// @desc    Get all posts
+// @route   GET /api/posts
+// @access  Public
 exports.getPosts = async (req, res) => {
     try {
         const pageSize = 10;
         const page = Number(req.query.page) || 1;
 
-        const count = await Post.countDocuments();
-
+        // Find posts with populated author info
         const posts = await Post.find()
-            .populate('author', 'name')
+            .populate({
+                path: 'author',
+                select: 'name isSuspended'
+            })
             .sort({ createdAt: -1 })
             .limit(pageSize)
             .skip(pageSize * (page - 1));
 
+        // Filter out posts whose author is suspended
+        const visiblePosts = posts.filter(post => !post.author?.isSuspended);
+
+        const totalPostsCount = await Post.countDocuments();
+
         res.status(200).json({
-            posts: posts.map(post => ({
+            posts: visiblePosts.map(post => ({
                 _id: post._id,
                 title: post.title,
                 content: post.content,
@@ -69,7 +132,7 @@ exports.getPosts = async (req, res) => {
                 imageUrl: post.imageUrl
             })),
             page,
-            pages: Math.ceil(count / pageSize)
+            pages: Math.ceil(totalPostsCount / pageSize)
         });
     } catch (error) {
         console.error(error);
@@ -118,6 +181,14 @@ exports.createPost = async (req, res) => {
     try {
         const { title, content, imageUrl } = req.body;
 
+        const user = await User.findById(req.user?._id);
+
+        if (!user || user.isSuspended) {
+            return res.status(403).json({
+                message:
+                    'Your account is suspended. You cannot create new posts.'
+            });
+        }
         const post = await Post.create({
             title,
             content,
@@ -144,6 +215,23 @@ exports.createPost = async (req, res) => {
             dislikes: populatedPost.dislikes,
             imageUrl: populatedPost?.imageUrl
         });
+        const posts = await Post.findById(req.params.id).populate({
+            path: 'author',
+            select: 'name email isAdmin isSuspended'
+        });
+
+        if (!posts) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+
+        // Check if the post author is suspended
+        if (posts.author.isSuspended) {
+            return res.status(403).json({
+                message: 'This post is not available'
+            });
+        }
+
+        res.status(200).json(posts);
     } catch (error) {
         console.error('Create post error:', error);
         res.status(500).json({ message: 'Server error' });
@@ -258,7 +346,7 @@ exports.likePost = async (req, res) => {
         console.log('alreadyLiked == >', alreadyLiked);
 
         // Check if user has disliked this post
-        const alreadyDisliked = post.dislikedBy.includes(req.user._id);
+        const alreadyDisliked = post.dislikedBy.includes(req.user?._id);
 
         // If already disliked, remove dislike
         if (alreadyDisliked) {
@@ -346,41 +434,32 @@ exports.dislikePost = async (req, res) => {
 };
 
 // @desc    Search posts
-// @route   GET /api/posts/search
+// @route   GET /api/posts/search?q=
 // @access  Public
 exports.searchPosts = async (req, res) => {
     try {
-        const { query } = req.query;
+        const searchTerm = req.query.q;
 
-        if (!query) {
+        if (!searchTerm) {
             return res
                 .status(400)
-                .json({ message: 'Search query is required' });
+                .json({ message: 'Please provide a search term' });
         }
 
         const posts = await Post.find({
             $or: [
-                { title: { $regex: query, $options: 'i' } },
-                { content: { $regex: query, $options: 'i' } }
+                { title: { $regex: searchTerm, $options: 'i' } },
+                { content: { $regex: searchTerm, $options: 'i' } }
             ]
-        }).populate('author', 'name');
-
-        res.status(200).json({
-            posts: posts.map(post => ({
-                _id: post._id,
-                title: post.title,
-                content: post.content,
-                author: {
-                    _id: post.author._id,
-                    name: post.author.name
-                },
-                createdAt: post.createdAt,
-                updatedAt: post.updatedAt,
-                likes: post.likes,
-                dislikes: post.dislikes,
-                imageUrl: post.imageUrl
-            }))
+        }).populate({
+            path: 'author',
+            select: 'name email isAdmin isSuspended'
         });
+
+        // Filter out posts from suspended users
+        const visiblePosts = posts.filter(post => !post.author.isSuspended);
+
+        res.status(200).json(visiblePosts);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -392,7 +471,24 @@ exports.searchPosts = async (req, res) => {
 // @access  Public
 exports.getPostsByUser = async (req, res) => {
     try {
-        const posts = await Post.find({ author: req.params.userId })
+        const userId = req.params.userId;
+
+        // Find the user to check if they are suspended
+        const user = await User.findById(userId);
+
+        console.log('post.controller.js getPostByUser user ==>', user);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (user.isSuspended) {
+            return res.status(403).json({
+                message: 'This user is suspended. Posts cannot be displayed.'
+            });
+        }
+
+        const posts = await Post.find({ author: userId })
             .populate('author', 'name')
             .sort({ createdAt: -1 });
 
