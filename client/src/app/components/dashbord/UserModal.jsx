@@ -36,9 +36,7 @@ export default function UserModal({ setIsModalOpen, onPrvImage }) {
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImage(file);
-      const imageUrl = URL.createObjectURL(file);
-      setPreviewImage(imageUrl);
+      setPreviewImage(URL.createObjectURL(file));
       const formData = new FormData();
       formData.append("file", file);
       formData.append("upload_preset", "Practis");
@@ -73,11 +71,30 @@ export default function UserModal({ setIsModalOpen, onPrvImage }) {
       <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-md">
         <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
 
-        {/* Error */}
+        {/* General error */}
         {isError && (
           <p className="text-red-500 text-sm mb-2">
             {error?.data?.message || "Something went wrong!"}
           </p>
+        )}
+
+        {/* Image Upload Error */}
+        {isErrorImage && (
+          <p className="text-red-500 text-sm mb-2">
+            {errorImage?.data?.message || "Image upload failed!"}
+          </p>
+        )}
+
+        {/* Image Upload Success */}
+        {isSuccessImage && (
+          <p className="text-green-500 text-sm mb-2">
+            Image uploaded successfully!
+          </p>
+        )}
+
+        {/* Image Upload Loading */}
+        {isLoadingImage && (
+          <p className="text-blue-500 text-sm mb-2">Uploading image...</p>
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

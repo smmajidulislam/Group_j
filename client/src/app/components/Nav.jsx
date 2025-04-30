@@ -1,11 +1,27 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../contexts/authContext/AuthContext";
 
 const Nav = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const { user, isLoading, logout } = useAuth();
+
+  // Dummy suggestion data
+  const suggestions = [
+    "Service One",
+    "Service Two",
+    "Service Three",
+    "Service Four",
+    "Service Five",
+    "Service Six",
+  ];
+
+  // Filtered suggestions
+  const filteredSuggestions = suggestions
+    .filter((item) => item.toLowerCase().includes(searchTerm.toLowerCase()))
+    .slice(0, 5); // সর্বোচ্চ 5টা দেখাও
 
   const renderSkeleton = () => (
     <div className="hidden md:flex space-x-4 animate-pulse">
@@ -15,14 +31,28 @@ const Nav = () => {
     </div>
   );
 
+  // To close suggestion box when clicked outside
+  const searchRef = useRef();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setSearchTerm(""); // Clear the search term if click is outside the search box
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <nav className="bg-gray-800 text-white sticky top-0 z-999">
+    <nav className="bg-gray-800 text-white sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex-shrink-0">
-            {/* Add your logo here if needed */}
-          </div>
+          <div className="flex-shrink-0">LOGO</div>
 
           {/* Desktop Menu */}
           {isLoading ? (
@@ -60,14 +90,14 @@ const Nav = () => {
               >
                 About Us
               </Link>
-              {/* {user?.user?.isAdmin === false && ( */}
+              {user?.user?.isAdmin === false && (
                 <Link
                   href="/dashbord"
                   className="hover:bg-gray-700 px-3 py-2 rounded"
                 >
                   Dashboard
                 </Link>
-              {/* )} */}
+              )}
               {user?.user?.isAdmin === true && (
                 <Link
                   href="/admindashbord"
@@ -76,6 +106,7 @@ const Nav = () => {
                   Admin Dashboard
                 </Link>
               )}
+
               {user && (
                 <button
                   className="hover:bg-gray-700 px-3 py-2 rounded"
@@ -87,16 +118,42 @@ const Nav = () => {
             </div>
           )}
 
-          {/* Search */}
-          <div className="hidden md:flex items-center">
-            <input
-              type="text"
-              placeholder="Search"
-              className="bg-gray-900 text-sm px-4 py-2 rounded-l focus:outline-none focus:ring"
-            />
-            <button className="bg-teal-500 px-4 py-2 rounded-r hover:bg-teal-600">
-              Search
-            </button>
+          {/* Search Box */}
+          <div
+            ref={searchRef}
+            className="hidden md:flex flex-col items-start relative"
+          >
+            <div className="flex">
+              <input
+                type="text"
+                placeholder="Search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="bg-gray-900 text-sm px-4 py-2 rounded-l focus:outline-none focus:ring"
+              />
+              <button className="bg-teal-500 px-4 py-2 rounded-r hover:bg-teal-600">
+                Search
+              </button>
+            </div>
+            {searchTerm && (
+              <div className="absolute top-full mt-1 bg-white text-black rounded-md shadow-lg w-full z-50 border border-gray-300">
+                {filteredSuggestions.length === 0 ? (
+                  <div className="px-4 py-2 text-sm text-gray-500">
+                    No suggestions
+                  </div>
+                ) : (
+                  filteredSuggestions.map((item, index) => (
+                    <div
+                      key={index}
+                      className="px-4 py-2 text-sm hover:bg-gray-300 cursor-pointer transition-all duration-150 border-b"
+                      onClick={() => setSearchTerm(item)} // Update searchTerm on selection
+                    >
+                      {item.length > 30 ? item.slice(0, 30) + "..." : item}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -185,7 +242,7 @@ const Nav = () => {
                   Admin Dashboard
                 </Link>
               )}
-              {user && (
+              {user?.token && (
                 <button
                   className="hover:bg-gray-700 px-3 py-2 rounded"
                   onClick={() => logout()}
