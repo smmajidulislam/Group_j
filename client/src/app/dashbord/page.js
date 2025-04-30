@@ -3,12 +3,18 @@ import { useState } from "react";
 import CreatePostButton from "../components/dashbord/CreatePostButton";
 import ProfileSummary from "../components/dashbord/ProfileSummary";
 import Link from "next/link";
-import { useGetPostsQuery } from "../features/api/postSlice/postSlice";
+import { useGetPostByIdQuery } from "../features/api/postSlice/postSlice";
 import Image from "next/image";
+import { useAuth } from "../contexts/authContext/AuthContext";
 
 export default function DashboardPage() {
   const [currentPage, setCurrentPage] = useState(1);
-  const { data, isLoading, isError } = useGetPostsQuery(currentPage);
+  const { user } = useAuth();
+  const userId = user?.user?._id;
+  console.log(userId);
+  const { data, isLoading, isError } = useGetPostByIdQuery(userId, {
+    skip: !userId,
+  });
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
