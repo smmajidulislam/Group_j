@@ -85,21 +85,24 @@ exports.createComment = async (req, res) => {
 // @access  Public
 exports.getAllCommentsByPostId = async (req, res) => {
     try {
-        if (req.user?.isSuspended) {
-            return res
-                .status(403)
-                .json({ message: 'Suspended users cannot view comments' });
-        }
-
         const { postId } = req.query;
 
         if (!postId) {
             return res.status(400).json({ message: 'Post ID is required' });
         }
 
-        const comments = await Comment.find({ post: postId })
+        let comments = await Comment.find({ post: postId })
             .populate('author', 'name')
             .sort({ createdAt: -1 });
+
+        // Filter out comments made by suspended users or visible to suspended users
+        if (req.user?.isSuspended) {
+            return res
+                .status(403)
+                .json({ message: 'Suspended users cannot view comments' });
+        }
+
+        comments = comments.filter(comment => !comment.author.isSuspended);
 
         res.status(200).json(
             comments.map(comment => ({

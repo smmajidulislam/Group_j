@@ -148,8 +148,11 @@ exports.getPostById = async (req, res) => {
     const post = await Post.findById(req.params.id).populate("author", "name");
 
     if (!post) {
-      return res.status(404).json({ message: "Post not found" });
+      return res.status(404).json({ message: 'Post not found' });
     }
+
+    // Count the total number of comments for the post
+    const commentsCount = await Comment.countDocuments({ post: post._id });
 
     res.status(200).json({
       _id: post._id,
@@ -157,19 +160,21 @@ exports.getPostById = async (req, res) => {
       content: post.content,
       author: {
         _id: post.author._id,
-        name: post.author.name,
+        name: post.author.name
       },
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
       likes: post.likes,
       dislikes: post.dislikes,
       imageUrl: post.imageUrl,
+      commentsCount // Include the total number of comments
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 // @desc    Create a post
 // @route   POST /api/posts
@@ -326,10 +331,18 @@ exports.deletePost = async (req, res) => {
 // @route   PUT /api/posts/:id/like
 // @access  Private
 exports.likePost = async (req, res) => {
-  console.log("req.user == >", req.user);
-  console.log("req.params == >", req.params);
-  try {
-    const post = await Post.findById(req.params?.id);
+    console.log('req.user == >', req.user);
+    console.log('req.params == >', req.params);
+    try {
+        // Check if the user is suspended
+        const user = await User.findById(req.user?._id);
+        if (!user || user.isSuspended) {
+            return res.status(403).json({
+                message: 'Suspended users cannot like posts.'
+            });
+        }
+
+        const post = await Post.findById(req.params?.id);
 
     console.log("post like == >", post);
 
@@ -382,8 +395,21 @@ exports.likePost = async (req, res) => {
 // @route   PUT /api/posts/:id/dislike
 // @access  Private
 exports.dislikePost = async (req, res) => {
+<<<<<<< HEAD
   try {
     const post = await Post.findById(req.params.id);
+=======
+    try {
+        // Check if the user is suspended
+        const user = await User.findById(req.user?._id);
+        if (!user || user.isSuspended) {
+            return res.status(403).json({
+                message: 'Suspended users cannot dislike posts.'
+            });
+        }
+
+        const post = await Post.findById(req.params.id);
+>>>>>>> origin/mijan
 
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
