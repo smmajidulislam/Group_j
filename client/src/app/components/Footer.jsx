@@ -7,11 +7,12 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Logo + Description */}
           <div>
-            <p className="text-xl font-bold text-white">Money Exchange</p>
+            <p className="text-xl font-bold text-white">WatchBuddy </p>
             <p className="mt-2 text-sm text-gray-400">
-              Secure and fast money exchange platform to convert currencies at
-              the best rates. Trusted by thousands for international and local
-              transactions.
+              WatchBuddy is your ultimate partner in entertainment and earning.
+              We bring you a platform where you can watch videos that follow
+              YouTube and Facebook’s community guidelines — and get rewarded for
+              your time!
             </p>
           </div>
 

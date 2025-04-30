@@ -1,14 +1,16 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 import Cookies from "js-cookie";
-import { useSingOutMutation } from "../../features/api/loginSlice/loginApiSlice";
-
 const AuthContext = createContext(null);
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState({
+    role:"user"
+  });
   const [isLoading, setIsLoading] = useState(true);
-  const [singOut] = useSingOutMutation();
+  const router = useRouter();
 
   useEffect(() => {
     const userData = Cookies.get("user");
@@ -17,18 +19,16 @@ export const AuthProvider = ({ children }) => {
     }
     setIsLoading(false);
   }, []);
-  const singOutUser = async () => {
-    try {
-      await singOut().unwrap();
-      Cookies.remove("user");
-      setUser(null);
-    } catch (error) {
-      setUser(null);
-    }
+  
+  const logout = () => {
+    Cookies.remove("user");
+    setUser(null);
+    router.push("/login");
+    toast.success("Logged out successfully! 👋");
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, isLoading, singOutUser }}>
+    <AuthContext.Provider value={{ user, setUser, isLoading, logout }}>
       {children}
     </AuthContext.Provider>
   );

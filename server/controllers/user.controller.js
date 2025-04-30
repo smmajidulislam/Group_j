@@ -14,12 +14,10 @@ exports.getUsers = async (req, res) => {
         const skip = (page - 1) * limit;
 
         // Only count non-suspended users
-        const totalUsers = await User.countDocuments({
-            isSuspended: { $ne: true }
-        });
+        const totalUsers = await User.countDocuments();
 
         // Find only non-suspended users
-        const users = await User.find({ isSuspended: { $ne: true } })
+        const users = await User.find({})
             .select(
                 '-password -resetPasswordToken -resetPasswordExpire -verificationToken'
             )
