@@ -105,7 +105,7 @@ exports.getPosts = async (req, res) => {
     const posts = await Post.find()
       .populate({
         path: "author",
-        select: "name isSuspended",
+        select: "name isSuspended isAdmin profileImage",
       })
       .sort({ createdAt: -1 })
       .limit(pageSize)
@@ -124,6 +124,8 @@ exports.getPosts = async (req, res) => {
         author: {
           _id: post.author?._id,
           name: post.author?.name,
+          isAdmin: post.author?.isAdmin,
+          profileImage: post.author?.profileImage,
         },
         createdAt: post.createdAt,
         updatedAt: post.updatedAt,
