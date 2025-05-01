@@ -1,69 +1,147 @@
 "use client";
-
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-
-const dummyPosts = [
-  {
-    _id: "6810ab41ecfb6508542b79e6",
-    title: "Dummy Post Title",
-    content:
-      "This is a sample post content. It is just a placeholder for testing without any API.",
-
-    createdAt: new Date().toISOString(),
-    author: {
-      name: "Dummy Author",
-    },
-  },
-];
-
-const dummyComments = [
-  { id: 1, text: "Great post!", author: "Alice" },
-  { id: 2, text: "Thanks for sharing.", author: "Bob" },
-  { id: 3, text: "Very helpful!", author: "Charlie" },
-  { id: 4, text: "Loved it.", author: "David" },
-];
+import { useAuth } from "../contexts/authContext/AuthContext";
+import {
+  useCreateCommentMutation,
+  useGetCommentsByPostQuery,
+} from "../features/api/commentSlice/commentSlice";
+import { useForm } from "react-hook-form";
+import { usePostByIdQuery } from "../features/api/postSlice/postSlice";
+import Cookies from "js-cookie";
 
 const Page = () => {
   const searchParams = useSearchParams();
-  const id = searchParams.get("id");
+  const postID = searchParams.get("id");
 
-  const post = dummyPosts.find((p) => p._id === "6810ab41ecfb6508542b79e6");
+  const [showAllComments, setShowAllComments] = useState(false);
+
+  const {
+    data: singelPost,
+    isLoading: singelPostLoading,
+    error: singelPostError,
+  } = usePostByIdQuery(postID, { skip: !postID });
+
+  const {
+    data: commentData,
+    isLoading: commentLoading,
+    error: commentError,
+  } = useGetCommentsByPostQuery(postID, { skip: !postID });
+
+  const [createComment] = useCreateCommentMutation();
+  const { user } = useAuth();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm();
 
   const [likes, setLikes] = useState(0);
-  const [showAllComments, setShowAllComments] = useState(false);
-  const [newComment, setNewComment] = useState("");
-  const [comments, setComments] = useState(dummyComments);
+  const [dislikes, setDislikes] = useState(0);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [hasDisliked, setHasDisliked] = useState(false);
+
+  // Set initial likes/dislikes and check cookie
+  useEffect(() => {
+    if (singelPost) {
+      setLikes(singelPost.likes || 0);
+      setDislikes(singelPost.dislikes || 0);
+
+      const userCookie = Cookies.get("user");
+      const userData = userCookie ? JSON.parse(userCookie) : null;
+
+      if (userData) {
+        setHasLiked(userData.likedPosts?.includes(postID));
+        setHasDisliked(userData.dislikedPosts?.includes(postID));
+      }
+    }
+  }, [singelPost, postID]);
 
   const handleLike = () => {
-    setLikes(likes + 1);
-  };
+    if (!user?.token) return alert("Please log in to like the post.");
 
-  const handleCommentSubmit = (e) => {
-    e.preventDefault();
-    if (newComment.trim()) {
-      const newCommentObj = {
-        id: Date.now(),
-        text: newComment,
-        author: "You",
-      };
-      setComments([newCommentObj, ...comments]);
-      setNewComment("");
+    const userCookie = Cookies.get("user");
+    const userData = userCookie ? JSON.parse(userCookie) : {};
+
+    if (userData.likedPosts?.includes(postID)) {
+      alert("You already liked this post.");
+      return;
     }
+
+    const alreadyDisliked = userData.dislikedPosts?.includes(postID);
+
+    const updatedLikedPosts = [...(userData.likedPosts || []), postID];
+    const updatedDislikedPosts = (userData.dislikedPosts || []).filter(
+      (id) => id !== postID
+    );
+
+    const updatedUser = {
+      ...userData,
+      likedPosts: updatedLikedPosts,
+      dislikedPosts: updatedDislikedPosts,
+    };
+
+    Cookies.set("user", JSON.stringify(updatedUser));
+    setHasLiked(true);
+    setHasDisliked(false);
+    setLikes((prev) => prev + 1);
+    if (alreadyDisliked) setDislikes((prev) => Math.max(0, prev - 1));
   };
 
-  if (!post) {
-    return <div className="text-center text-red-500 mt-10">Post not found</div>;
-  }
+  const handleDislike = () => {
+    if (!user?.token) return alert("Please log in to dislike the post.");
+
+    const userCookie = Cookies.get("user");
+    const userData = userCookie ? JSON.parse(userCookie) : {};
+
+    if (userData.dislikedPosts?.includes(postID)) {
+      alert("You already disliked this post.");
+      return;
+    }
+
+    const alreadyLiked = userData.likedPosts?.includes(postID);
+
+    const updatedDislikedPosts = [...(userData.dislikedPosts || []), postID];
+    const updatedLikedPosts = (userData.likedPosts || []).filter(
+      (id) => id !== postID
+    );
+
+    const updatedUser = {
+      ...userData,
+      likedPosts: updatedLikedPosts,
+      dislikedPosts: updatedDislikedPosts,
+    };
+
+    Cookies.set("user", JSON.stringify(updatedUser));
+    setHasDisliked(true);
+    setHasLiked(false);
+    setDislikes((prev) => prev + 1);
+    if (alreadyLiked) setLikes((prev) => Math.max(0, prev - 1));
+  };
+
+  const onSubmit = async (data) => {
+    const commentData = {
+      postId: postID,
+      content: data.comment,
+    };
+    await createComment(commentData).unwrap();
+    reset();
+  };
+
+  if (singelPostLoading) return <p className="text-white">Loading...</p>;
+  if (singelPostError || !singelPost)
+    return <p className="text-red-500 text-center">Post not found</p>;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-white">
       {/* Post Image */}
-      {post.imageUrl ? (
+      {singelPost.imageUrl ? (
         <Image
-          src={post.imageUrl}
-          alt={post.title}
+          src={singelPost.imageUrl}
+          alt={singelPost.title}
           width={800}
           height={400}
           className="w-full h-52 sm:h-60 md:h-72 lg:h-96 object-cover rounded-md mb-4"
@@ -75,64 +153,90 @@ const Page = () => {
       )}
 
       {/* Title */}
-      <h1 className="text-2xl sm:text-3xl font-bold mb-2">{post.title}</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+        {singelPost.title}
+      </h1>
 
       {/* Author & Date */}
       <div className="text-gray-400 mb-4 text-xs sm:text-sm">
-        <span>{post.author?.name || "Unknown Author"}</span> |{" "}
-        <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+        <span>{singelPost.author?.name || "Unknown Author"}</span> |{" "}
+        <span>{new Date(singelPost.createdAt).toLocaleDateString()}</span>
       </div>
 
       {/* Content */}
       <p className="text-gray-200 leading-relaxed mb-6 text-sm sm:text-base">
-        {post.content}
+        {singelPost.content}
       </p>
 
-      {/* Likes */}
-      <button
-        onClick={handleLike}
-        className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 sm:px-4 rounded mb-4 text-sm sm:text-base"
-      >
-        👍 Like ({likes})
-      </button>
+      {/* Like & Dislike Buttons */}
+      {user?.token ? (
+        <>
+          <button
+            onClick={handleLike}
+            className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 sm:px-4 rounded m-4 mb-4 text-sm sm:text-base"
+          >
+            👍 Like ({likes})
+          </button>
+          <button
+            onClick={handleDislike}
+            className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 sm:px-4 rounded mb-4 text-sm sm:text-base"
+          >
+            👎 Dislike ({dislikes})
+          </button>
+        </>
+      ) : (
+        <p className="text-gray-400 mb-4 text-sm italic">
+          Please log in to like or dislike the post.
+        </p>
+      )}
 
       {/* Comments Section */}
       <div className="mt-6">
         <h2 className="text-lg sm:text-xl font-semibold mb-2">Comments</h2>
 
         {/* Comment Form */}
-        <form onSubmit={handleCommentSubmit} className="mb-4">
-          <textarea
-            className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600 mb-2 text-sm sm:text-base"
-            rows={3}
-            placeholder="Write a comment..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-          />
-          <button
-            type="submit"
-            className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-white text-sm sm:text-base"
-          >
-            Post Comment
-          </button>
-        </form>
+        {user?.token ? (
+          <form onSubmit={handleSubmit(onSubmit)} className="mb-4">
+            <textarea
+              {...register("comment", { required: "Comment cannot be empty" })}
+              className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600 mb-2 text-sm sm:text-base"
+              rows={3}
+              placeholder="Write a comment..."
+            />
+            {errors.comment && (
+              <p className="text-red-500 text-sm">{errors.comment.message}</p>
+            )}
+            <button
+              type="submit"
+              className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-white text-sm sm:text-base"
+            >
+              Post Comment
+            </button>
+          </form>
+        ) : (
+          <p className="text-gray-400 mb-4 text-sm italic">
+            Please log in to post a comment.
+          </p>
+        )}
 
-        {/* Comments Display */}
+        {/* Comments List */}
         <div className="space-y-3">
-          {(showAllComments ? comments : comments.slice(0, 2)).map(
-            (comment) => (
-              <div
-                key={comment.id}
-                className="bg-gray-800 p-3 rounded text-sm text-gray-300"
-              >
-                <p className="font-semibold text-white">{comment.author}</p>
-                <p>{comment.text}</p>
-              </div>
-            )
-          )}
+          {(showAllComments
+            ? commentData?.comments
+            : commentData?.comments.slice(0, 2)
+          )?.map((comment) => (
+            <div
+              key={comment._id}
+              className="bg-gray-800 p-3 rounded text-sm text-gray-300"
+            >
+              <p className="font-semibold text-white">
+                {comment?.author?.name || "Anonymous"}
+              </p>
+              <p>{comment?.content}</p>
+            </div>
+          ))}
 
-          {/* See more button */}
-          {comments.length > 2 && !showAllComments && (
+          {commentData?.comments.length > 2 && !showAllComments && (
             <button
               onClick={() => setShowAllComments(true)}
               className="text-blue-400 hover:underline text-sm mt-2"

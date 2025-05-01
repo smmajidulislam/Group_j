@@ -68,7 +68,7 @@ const Nav = () => {
               >
                 Service
               </Link>
-              {!user && (
+              {!user?.token && (
                 <>
                   <Link
                     href="/login"
@@ -107,7 +107,7 @@ const Nav = () => {
                 </Link>
               )}
 
-              {user && (
+              {user?.token && (
                 <button
                   className="hover:bg-gray-700 px-3 py-2 rounded"
                   onClick={() => logout()}
@@ -204,7 +204,7 @@ const Nav = () => {
               >
                 Service
               </Link>
-              {!user && (
+              {!user.token && (
                 <>
                   <Link
                     href="/login"

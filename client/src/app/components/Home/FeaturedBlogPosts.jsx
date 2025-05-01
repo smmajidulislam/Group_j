@@ -1,15 +1,21 @@
 "use client";
-
-import { useGetPostsQuery } from "@/app/features/api/postSlice/postSlice";
+import { useState } from "react";
+import {
+  useGetPostsQuery,
+  useLikePostMutation,
+  useDislikePostMutation,
+} from "@/app/features/api/postSlice/postSlice";
 import Link from "next/link";
 import Image from "next/image";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
-import { useState } from "react";
+import Cookies from "js-cookie";
 
 export default function FeaturedBlogPosts() {
   const [currentPage, setCurrentPage] = useState(1);
   const { data, isLoading, isError, error } = useGetPostsQuery(currentPage);
   const posts = data?.posts || [];
+  const [likePost] = useLikePostMutation();
+  const [dislikePost] = useDislikePostMutation();
 
   const formatDate = (date) => {
     const d = new Date(date);
@@ -24,6 +30,87 @@ export default function FeaturedBlogPosts() {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+  };
+
+  // Get user data from cookies
+  const userCookie = Cookies.get("user");
+  const userData = userCookie ? JSON.parse(userCookie) : null;
+
+  // Handling like click
+  // Like handler
+  const handleLike = async (postId) => {
+    if (!userData) {
+      alert("Please log in to like the post.");
+      return;
+    }
+
+    const likedPosts = Array.isArray(userData.likedPosts)
+      ? userData.likedPosts
+      : [];
+    const dislikedPosts = Array.isArray(userData.dislikedPosts)
+      ? userData.dislikedPosts
+      : [];
+
+    const hasLiked = likedPosts.includes(postId);
+    const hasDisliked = dislikedPosts.includes(postId);
+
+    if (hasLiked) {
+      alert("You already liked this post.");
+      return;
+    }
+
+    // যদি আগে dislike করে থাকে তাহলে সেটা রিমুভ করো
+    if (hasDisliked) {
+      dislikedPosts.splice(dislikedPosts.indexOf(postId), 1);
+    }
+
+    await likePost(postId);
+
+    const updatedUserData = {
+      ...userData,
+      likedPosts: [...likedPosts, postId],
+      dislikedPosts: dislikedPosts, // আপডেটেড dislike list
+    };
+
+    Cookies.set("user", JSON.stringify(updatedUserData));
+  };
+
+  // Dislike handler
+  const handleDislike = async (postId) => {
+    if (!userData) {
+      alert("Please log in to dislike the post.");
+      return;
+    }
+
+    const likedPosts = Array.isArray(userData.likedPosts)
+      ? userData.likedPosts
+      : [];
+    const dislikedPosts = Array.isArray(userData.dislikedPosts)
+      ? userData.dislikedPosts
+      : [];
+
+    const hasDisliked = dislikedPosts.includes(postId);
+    const hasLiked = likedPosts.includes(postId);
+
+    if (hasDisliked) {
+      alert("You already disliked this post.");
+      return;
+    }
+
+    // যদি আগে like করে থাকে তাহলে সেটা রিমুভ করো
+    if (hasLiked) {
+      likedPosts.splice(likedPosts.indexOf(postId), 1);
+    }
+
+    await dislikePost(postId);
+
+    const updatedUserData = {
+      ...userData,
+      dislikedPosts: [...dislikedPosts, postId],
+      likedPosts: likedPosts, // আপডেটেড like list
+    };
+
+    Cookies.set("user", JSON.stringify(updatedUserData));
   };
 
   if (isLoading) {
@@ -79,12 +166,22 @@ export default function FeaturedBlogPosts() {
             {/* Likes and Comments */}
             <div className="flex items-center text-sm text-gray-400 gap-6 mb-4">
               <div className="flex items-center gap-1">
-                <ThumbsUp className="w-4 h-4" />
-                <span>{post.likes || 0}</span>
+                <button
+                  className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full shadow-sm transition duration-200 flex items-center space-x-2"
+                  onClick={() => handleLike(post._id, post.likes)}
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                  <span>{post.likes || 0}</span>
+                </button>
               </div>
               <div className="flex items-center gap-1">
-                <ThumbsDown className="w-4 h-4" />
-                <span>{post.dislikes || 0}</span>
+                <button
+                  className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full shadow-sm transition duration-200 flex items-center space-x-2"
+                  onClick={() => handleDislike(post._id)}
+                >
+                  <ThumbsDown className="w-4 h-4" />
+                  <span>{post.dislikes || 0}</span>
+                </button>
               </div>
             </div>
 
