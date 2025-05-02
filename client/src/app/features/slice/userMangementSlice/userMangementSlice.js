@@ -1,4 +1,3 @@
-// app/features/userUI/userUISlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
@@ -8,8 +7,8 @@ const initialState = {
   editData: {},
 };
 
-const userUISlice = createSlice({
-  name: "userUI",
+const userSlice = createSlice({
+  name: "userMangement",
   initialState,
   reducers: {
     setCurrentPage: (state, action) => {
@@ -20,11 +19,11 @@ const userUISlice = createSlice({
       state.deletionStatus[id] = status;
     },
     setEditMode: (state, action) => {
-      const { id, mode } = action.payload;
-      state.editMode[id] = mode;
+      const { id, value } = action.payload;
+      state.editMode[id] = value;
     },
     setEditData: (state, action) => {
-      state.editData = { ...state.editData, ...action.payload };
+      state.editData = action.payload;
     },
     resetEditData: (state) => {
       state.editData = {};
@@ -38,6 +37,6 @@ export const {
   setEditMode,
   setEditData,
   resetEditData,
-} = userUISlice.actions;
+} = userSlice.actions;
 
-export default userUISlice.reducer;
+export default userSlice.reducer;

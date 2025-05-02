@@ -4,7 +4,6 @@ import Image from "next/image";
 // components/FeaturedSection.jsx
 export default function HeroSection() {
   const { data, isLoading, isError, error } = useGetPostsQuery(1);
-
   // Handle loading and error states
   if (isLoading) {
     return (
