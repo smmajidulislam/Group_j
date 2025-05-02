@@ -11,7 +11,6 @@ export default function DashboardPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const { user } = useAuth();
   const userId = user?.user?._id;
-  console.log(userId);
   const { data, isLoading, isError } = useGetPostByIdQuery(userId, {
     skip: !userId,
   });
