@@ -2,26 +2,38 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../contexts/authContext/AuthContext";
+import { useSearchPostsQuery } from "../features/api/searchSlice/searchSlice";
 
 const Nav = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const { user, isLoading, logout } = useAuth();
 
-  // Dummy suggestion data
-  const suggestions = [
-    "Service One",
-    "Service Two",
-    "Service Three",
-    "Service Four",
-    "Service Five",
-    "Service Six",
-  ];
+  // RTK Query call with skip if search term is empty
+  const {
+    data: posts,
+    isLoading: isSearching,
+    isError,
+  } = useSearchPostsQuery(searchTerm, {
+    skip: searchTerm.trim() === "",
+  });
 
-  // Filtered suggestions
-  const filteredSuggestions = suggestions
-    .filter((item) => item.toLowerCase().includes(searchTerm.toLowerCase()))
-    .slice(0, 5); // সর্বোচ্চ 5টা দেখাও
+  const filteredSuggestions =
+    posts?.map((post) => post.title).slice(0, 5) || [];
+
+  // Close suggestion box when clicked outside
+  const searchRef = useRef();
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setSearchTerm(""); // Clear search when clicked outside
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const renderSkeleton = () => (
     <div className="hidden md:flex space-x-4 animate-pulse">
@@ -30,22 +42,6 @@ const Nav = () => {
       <div className="bg-gray-700 h-6 w-16 rounded"></div>
     </div>
   );
-
-  // To close suggestion box when clicked outside
-  const searchRef = useRef();
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setSearchTerm(""); // Clear the search term if click is outside the search box
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   return (
     <nav className="bg-gray-800 text-white sticky top-0 z-50">
@@ -106,7 +102,6 @@ const Nav = () => {
                   Admin Dashboard
                 </Link>
               )}
-
               {user?.token && (
                 <button
                   className="hover:bg-gray-700 px-3 py-2 rounded"
@@ -127,8 +122,8 @@ const Nav = () => {
               <input
                 type="text"
                 placeholder="Search"
+                onChange={(e) => setSearchTerm(e.target.value)} // no debounce
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
                 className="bg-gray-900 text-sm px-4 py-2 rounded-l focus:outline-none focus:ring"
               />
               <button className="bg-teal-500 px-4 py-2 rounded-r hover:bg-teal-600">
@@ -137,7 +132,15 @@ const Nav = () => {
             </div>
             {searchTerm && (
               <div className="absolute top-full mt-1 bg-white text-black rounded-md shadow-lg w-full z-50 border border-gray-300">
-                {filteredSuggestions.length === 0 ? (
+                {isSearching ? (
+                  <div className="px-4 py-2 text-sm text-gray-500">
+                    Searching...
+                  </div>
+                ) : isError ? (
+                  <div className="px-4 py-2 text-sm text-red-500">
+                    Error fetching posts
+                  </div>
+                ) : filteredSuggestions.length === 0 ? (
                   <div className="px-4 py-2 text-sm text-gray-500">
                     No suggestions
                   </div>
@@ -146,7 +149,7 @@ const Nav = () => {
                     <div
                       key={index}
                       className="px-4 py-2 text-sm hover:bg-gray-300 cursor-pointer transition-all duration-150 border-b"
-                      onClick={() => setSearchTerm(item)} // Update searchTerm on selection
+                      onClick={() => setSearchTerm(item)}
                     >
                       {item.length > 30 ? item.slice(0, 30) + "..." : item}
                     </div>
@@ -204,7 +207,7 @@ const Nav = () => {
               >
                 Service
               </Link>
-              {!user.token && (
+              {!user?.token && (
                 <>
                   <Link
                     href="/login"
