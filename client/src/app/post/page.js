@@ -1,4 +1,5 @@
 "use client";
+
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
@@ -7,8 +8,12 @@ import { useAuth } from "../contexts/authContext/AuthContext";
 import {
   useCreateCommentMutation,
   useGetCommentsByPostQuery,
+  useUpdateCommentMutation,
 } from "../features/api/commentSlice/commentSlice";
-import { usePostByIdQuery } from "../features/api/postSlice/postSlice";
+import {
+  usePostByIdQuery,
+  useUpdatePostMutation,
+} from "../features/api/postSlice/postSlice";
 import { useForm } from "react-hook-form";
 import Cookies from "js-cookie";
 import {
@@ -17,6 +22,11 @@ import {
   dislikePost,
   addComment,
   setComments,
+  setEditingPost,
+  setEditForm,
+  setEditingCommentId,
+  setEditCommentText,
+  updatePostInState,
 } from "../features/slice/publicPostSlice/publicPostSlice";
 
 const Page = () => {
@@ -24,21 +34,32 @@ const Page = () => {
   const postID = searchParams.get("id");
 
   const dispatch = useDispatch();
-  const { post, comments, likes, dislikes, hasLiked, hasDisliked } =
-    useSelector((state) => state.publicPost);
+  const {
+    post,
+    comments,
+    likes,
+    dislikes,
+    editingPost,
+    editForm,
+    editCommentText,
+    editingCommentId,
+  } = useSelector((state) => state.publicPost);
 
   const [showAllComments, setShowAllComments] = useState(false);
+  const { user } = useAuth();
 
   const {
     data: singelPost,
     isLoading: postLoading,
     error: postError,
   } = usePostByIdQuery(postID, { skip: !postID });
-  const { data: commentData, isLoading: commentLoading } =
-    useGetCommentsByPostQuery(postID, { skip: !postID });
+  const { data: commentData } = useGetCommentsByPostQuery(postID, {
+    skip: !postID,
+  });
 
   const [createComment] = useCreateCommentMutation();
-  const { user } = useAuth();
+  const [updatePost] = useUpdatePostMutation();
+  const [updateComment] = useUpdateCommentMutation();
 
   const {
     register,
@@ -47,10 +68,16 @@ const Page = () => {
     reset,
   } = useForm();
 
-  // Set post and comment data to Redux
   useEffect(() => {
     if (singelPost) {
       dispatch(setPost(singelPost));
+      dispatch(
+        setEditForm({
+          title: singelPost.title,
+          content: singelPost.content,
+          imageUrl: singelPost.imageUrl || "",
+        })
+      );
 
       const userCookie = Cookies.get("user");
       const userData = userCookie ? JSON.parse(userCookie) : null;
@@ -68,68 +95,90 @@ const Page = () => {
 
   const handleLike = () => {
     if (!user?.token) return alert("Please log in to like the post.");
-
     const userCookie = Cookies.get("user");
     const userData = userCookie ? JSON.parse(userCookie) : {};
-
-    if (userData.likedPosts?.includes(postID)) {
-      alert("You already liked this post.");
-      return;
-    }
-
-    const alreadyDisliked = userData.dislikedPosts?.includes(postID);
-
+    if (userData.likedPosts?.includes(postID)) return alert("Already liked.");
     const updatedLikedPosts = [...(userData.likedPosts || []), postID];
     const updatedDislikedPosts = (userData.dislikedPosts || []).filter(
       (id) => id !== postID
     );
-
-    const updatedUser = {
-      ...userData,
-      likedPosts: updatedLikedPosts,
-      dislikedPosts: updatedDislikedPosts,
-    };
-
-    Cookies.set("user", JSON.stringify(updatedUser));
+    Cookies.set(
+      "user",
+      JSON.stringify({
+        ...userData,
+        likedPosts: updatedLikedPosts,
+        dislikedPosts: updatedDislikedPosts,
+      })
+    );
     dispatch(likePost());
   };
 
   const handleDislike = () => {
     if (!user?.token) return alert("Please log in to dislike the post.");
-
     const userCookie = Cookies.get("user");
     const userData = userCookie ? JSON.parse(userCookie) : {};
-
-    if (userData.dislikedPosts?.includes(postID)) {
-      alert("You already disliked this post.");
-      return;
-    }
-
-    const alreadyLiked = userData.likedPosts?.includes(postID);
-
+    if (userData.dislikedPosts?.includes(postID))
+      return alert("Already disliked.");
     const updatedDislikedPosts = [...(userData.dislikedPosts || []), postID];
     const updatedLikedPosts = (userData.likedPosts || []).filter(
       (id) => id !== postID
     );
-
-    const updatedUser = {
-      ...userData,
-      likedPosts: updatedLikedPosts,
-      dislikedPosts: updatedDislikedPosts,
-    };
-
-    Cookies.set("user", JSON.stringify(updatedUser));
+    Cookies.set(
+      "user",
+      JSON.stringify({
+        ...userData,
+        likedPosts: updatedLikedPosts,
+        dislikedPosts: updatedDislikedPosts,
+      })
+    );
     dispatch(dislikePost());
   };
 
   const onSubmit = async (data) => {
-    const commentData = {
-      postId: postID,
-      content: data.comment,
-    };
+    const commentData = { postId: postID, content: data.comment };
     const res = await createComment(commentData).unwrap();
-    dispatch(addComment(res)); // New comment added
+    dispatch(addComment(res));
     reset();
+  };
+
+  const handlePostUpdate = async () => {
+    try {
+      const updatedPost = await updatePost({
+        id: postID,
+        title: editForm.title,
+        content: editForm.content,
+        imageUrl: editForm.imageUrl,
+      }).unwrap();
+
+      dispatch(updatePostInState(updatedPost));
+      dispatch(setEditingPost(false));
+    } catch (error) {
+      console.error("Post update failed:", error);
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      dispatch(setEditForm({ ...editForm, imageUrl: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCommentUpdate = async (commentId) => {
+    const updated = await updateComment({
+      id: commentId,
+      commentData: { content: editCommentText },
+    }).unwrap();
+    const updatedComments = comments.map((comment) =>
+      comment._id === commentId ? updated : comment
+    );
+    dispatch(setComments(updatedComments));
+    dispatch(setEditingCommentId(null));
+    dispatch(setEditCommentText(""));
   };
 
   if (postLoading) return <p className="text-white">Loading...</p>;
@@ -145,6 +194,7 @@ const Page = () => {
           alt={post.title}
           width={800}
           height={400}
+          priority
           className="w-full h-60 object-cover rounded-md mb-4"
         />
       ) : (
@@ -165,82 +215,169 @@ const Page = () => {
       {/* Content */}
       <p className="text-gray-200 mb-6">{post.content}</p>
 
-      {/* Like/Dislike */}
-      {user?.token ? (
-        <>
-          <button
-            onClick={handleLike}
-            className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded mr-2"
-          >
-            👍 Like ({likes})
-          </button>
-          <button
-            onClick={handleDislike}
-            className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded"
-          >
-            👎 Dislike ({dislikes})
-          </button>
-        </>
-      ) : (
-        <p className="text-gray-400 mb-4 italic">
-          Please log in to like or dislike the post.
-        </p>
+      {/* Edit Button for Post */}
+      {user?.user?.name === post.author?.name && !editingPost && (
+        <button
+          onClick={() => dispatch(setEditingPost(true))}
+          className="bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-3 rounded mb-4"
+        >
+          ✏️ Edit Post
+        </button>
       )}
 
-      {/* Comments */}
-      <div className="mt-6">
-        <h2 className="text-xl font-semibold mb-2">Comments</h2>
-
-        {/* Comment Form */}
-        {user?.token ? (
-          <form onSubmit={handleSubmit(onSubmit)} className="mb-4">
-            <textarea
-              {...register("comment", { required: "Comment cannot be empty" })}
-              className="w-full p-2 bg-gray-800 text-white border border-gray-600 rounded mb-2"
-              rows={3}
-              placeholder="Write a comment..."
-            />
-            {errors.comment && (
-              <p className="text-red-500 text-sm">{errors.comment.message}</p>
-            )}
+      {editingPost && (
+        <div className="mb-6">
+          <input
+            type="text"
+            value={editForm.title}
+            onChange={(e) =>
+              dispatch(setEditForm({ ...editForm, title: e.target.value }))
+            }
+            placeholder="Title"
+            className="w-full mb-2 p-2 bg-gray-800 border border-gray-600 rounded"
+          />
+          <textarea
+            value={editForm.content}
+            onChange={(e) =>
+              dispatch(setEditForm({ ...editForm, content: e.target.value }))
+            }
+            rows={4}
+            placeholder="Content"
+            className="w-full mb-2 p-2 bg-gray-800 border border-gray-600 rounded"
+          />
+          <input
+            type="file"
+            onChange={handleImageChange}
+            className="mb-2 text-sm"
+          />
+          <div className="flex gap-2">
             <button
-              type="submit"
-              className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-white"
+              onClick={handlePostUpdate}
+              className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded"
             >
-              Post Comment
+              ✅ Confirm Update
             </button>
-          </form>
-        ) : (
-          <p className="text-gray-400 mb-4 italic">
-            Please log in to post a comment.
-          </p>
-        )}
-
-        {/* Comment List */}
-        <div className="space-y-3">
-          {(showAllComments ? comments : comments.slice(0, 2))?.map(
-            (comment) => (
-              <div
-                key={comment._id}
-                className="bg-gray-800 p-3 rounded text-sm text-gray-300"
-              >
-                <p className="font-semibold text-white">
-                  {comment.author?.name || "Anonymous"}
-                </p>
-                <p>{comment.content}</p>
-              </div>
-            )
-          )}
-          {comments.length > 2 && !showAllComments && (
             <button
-              onClick={() => setShowAllComments(true)}
-              className="text-blue-400 hover:underline text-sm mt-2"
+              onClick={() => dispatch(setEditingPost(false))}
+              className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded"
             >
-              See more comments...
+              ❌ Cancel
             </button>
-          )}
+          </div>
         </div>
+      )}
+
+      {/* Likes & Dislikes */}
+      <div className="flex gap-4 items-center mb-6">
+        <button
+          onClick={handleLike}
+          className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded"
+        >
+          👍 {likes}
+        </button>
+        <button
+          onClick={handleDislike}
+          className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded"
+        >
+          👎 {dislikes}
+        </button>
       </div>
+
+      {/* Comments Section */}
+      <div className="mb-8">
+        <h2 className="text-2xl mb-4">Comments ({comments.length})</h2>
+
+        {comments
+          .slice(0, showAllComments ? comments.length : 3)
+          .map((comment) => (
+            <div
+              key={comment._id}
+              className="border-b border-gray-600 pb-4 mb-4"
+            >
+              <p className="text-gray-200">{comment.content}</p>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-400">
+                  {comment.author?.name} |{" "}
+                  {new Date(comment.createdAt).toLocaleDateString()}
+                </span>
+                {/* Edit/Delete Buttons */}
+                {user?.user?.name === comment.author?.name && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        dispatch(setEditingCommentId(comment._id));
+                        dispatch(setEditCommentText(comment.content));
+                      }}
+                      className="text-yellow-600"
+                    >
+                      ✏️ Edit
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Edit Comment */}
+              {editingCommentId === comment._id && (
+                <div className="mt-4">
+                  <textarea
+                    value={editCommentText}
+                    onChange={(e) =>
+                      dispatch(setEditCommentText(e.target.value))
+                    }
+                    rows={3}
+                    className="w-full p-2 bg-gray-800 border border-gray-600 rounded"
+                  />
+                  <button
+                    onClick={() => handleCommentUpdate(comment._id)}
+                    className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded mt-2"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => dispatch(setEditingCommentId(null))}
+                    className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded mt-2 ml-2"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+
+        {/* Show All Comments Button */}
+        {!showAllComments && comments.length > 3 && (
+          <button
+            onClick={() => setShowAllComments(true)}
+            className="text-blue-600"
+          >
+            Show all comments
+          </button>
+        )}
+      </div>
+
+      {/* Add Comment */}
+      {user?.token && (
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="border-t border-gray-600 pt-4"
+        >
+          <textarea
+            {...register("comment", { required: "Comment is required" })}
+            rows={3}
+            placeholder="Add your comment"
+            className="w-full p-2 bg-gray-800 border border-gray-600 rounded mb-2"
+          />
+          {errors.comment && (
+            <p className="text-red-500 text-sm">{errors.comment.message}</p>
+          )}
+          <button
+            type="submit"
+            className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded"
+          >
+            Submit Comment
+          </button>
+        </form>
+      )}
     </div>
   );
 };
