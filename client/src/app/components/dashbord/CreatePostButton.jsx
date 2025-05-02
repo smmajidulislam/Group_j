@@ -28,7 +28,6 @@ export default function CreatePostButton() {
 
   const [createPost] = useCreatePostMutation();
   const [imageUpload] = useUploadImageMutation();
-
   const {
     register,
     handleSubmit,

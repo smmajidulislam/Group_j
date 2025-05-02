@@ -7,9 +7,17 @@ const initialState = {
   dislikes: 0,
   hasLiked: false,
   hasDisliked: false,
+  editingPost: false, // New state for editing post
+  editingCommentId: null, // New state for editing comment
+  editCommentText: "", // New state for comment text
+  editForm: {
+    title: "",
+    content: "",
+    imageUrl: "",
+  },
 };
 
-const postSlice = createSlice({
+const publicPostSlice = createSlice({
   name: "publicPost",
   initialState,
   reducers: {
@@ -17,6 +25,19 @@ const postSlice = createSlice({
       state.post = action.payload;
       state.likes = action.payload.likes || 0;
       state.dislikes = action.payload.dislikes || 0;
+    },
+    setComments: (state, action) => {
+      state.comments = action.payload;
+    },
+    addComment: (state, action) => {
+      state.comments.unshift(action.payload);
+    },
+    updateCommentInState: (state, action) => {
+      const { id, updatedComment } = action.payload;
+      const index = state.comments.findIndex((c) => c._id === id);
+      if (index !== -1) {
+        state.comments[index] = updatedComment;
+      }
     },
     likePost: (state) => {
       if (!state.hasLiked) {
@@ -42,22 +63,46 @@ const postSlice = createSlice({
       state.hasLiked = false;
       state.hasDisliked = false;
     },
-    addComment: (state, action) => {
-      state.comments.push(action.payload);
+
+    // New actions for editing post
+    setEditingPost: (state, action) => {
+      state.editingPost = action.payload;
     },
-    setComments: (state, action) => {
-      state.comments = action.payload;
+    setEditForm: (state, action) => {
+      state.editForm = action.payload;
+    },
+    setEditingCommentId: (state, action) => {
+      state.editingCommentId = action.payload;
+    },
+    setEditCommentText: (state, action) => {
+      state.editCommentText = action.payload;
+    },
+
+    // Action to update a post in the state
+    updatePostInState: (state, action) => {
+      const { title, content, imageUrl } = action.payload;
+      if (state.post) {
+        state.post.title = title;
+        state.post.content = content;
+        state.post.imageUrl = imageUrl;
+      }
     },
   },
 });
 
 export const {
   setPost,
+  setComments,
+  addComment,
+  updateCommentInState,
   likePost,
   dislikePost,
   resetReactions,
-  addComment,
-  setComments,
-} = postSlice.actions;
+  setEditingPost,
+  setEditForm,
+  setEditingCommentId,
+  setEditCommentText,
+  updatePostInState,
+} = publicPostSlice.actions;
 
-export default postSlice.reducer;
+export default publicPostSlice.reducer;
