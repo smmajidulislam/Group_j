@@ -1,154 +1,190 @@
-"use client";
-import { useState, useEffect } from "react";
+// use client
+import { useSelector, useDispatch } from "react-redux";
 import {
-  useGetPostsQuery,
-  useUpdatePostMutation,
-  useDeletePostMutation,
-} from "@/app/features/api/postSlice/postSlice";
+  useDeleteUserMutation,
+  useGetUsersQuery,
+  useUpdateUserMutation,
+} from "@/app/features/api/userSlice/userSlice";
 
-export default function PostManagement() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const { data, error, isLoading } = useGetPostsQuery(currentPage);
-  const [updatePost] = useUpdatePostMutation();
-  const [deletePost] = useDeletePostMutation();
-  const [posts, setPosts] = useState([]);
-  const [editingPost, setEditingPost] = useState(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editContent, setEditContent] = useState("");
-  const [deleteLoading, setDeleteLoading] = useState(false);
+import {
+  setCurrentPage,
+  setDeletionStatus,
+  setEditMode,
+  setEditData,
+} from "@/app/features/slice/userUiSlice/userUiSlice";
 
-  useEffect(() => {
-    if (data && data.posts) {
-      setPosts(data.posts);
-    }
-  }, [data]);
+export default function UserManagement() {
+  // Get all necessary state from Redux
+  const { currentPage, deletionStatus, editMode, editData } = useSelector(
+    (state) => state.userUI
+  );
+  const dispatch = useDispatch();
+
+  const { data, error, isLoading } = useGetUsersQuery(currentPage);
+  const [deleteUser] = useDeleteUserMutation();
+  const [updateUser] = useUpdateUserMutation();
 
   const handlePageChange = (page) => {
-    setCurrentPage(page);
+    dispatch(setCurrentPage(page)); // Update current page in Redux
   };
 
-  const handleEditClick = (post) => {
-    setEditingPost(post._id);
-    setEditTitle(post.title);
-    setEditContent(post.content);
-  };
-
-  const handleEditSave = async () => {
-    try {
-      await updatePost({
-        id: editingPost,
-        title: editTitle,
-        content: editContent,
-      }).unwrap();
-      setEditingPost(null);
-    } catch (error) {
-      console.error("Update failed", error);
-    }
-  };
-
-  const handleDeleteClick = async (postId) => {
-    setDeleteLoading(true);
-    try {
-      await deletePost(postId).unwrap();
-      setPosts(posts.filter((post) => post._id !== postId)); // Remove the deleted post from the state
-    } catch (error) {
-      console.error("Delete failed", error);
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingPost(null);
-    setEditTitle("");
-    setEditContent("");
-  };
-
-  const isPrevDisabled = currentPage === 1;
   const isNextDisabled = currentPage === data?.pages;
+  const isPrevDisabled = currentPage === 1;
 
-  if (isLoading || deleteLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  const handleDeleteUser = async (id) => {
+    try {
+      dispatch(setDeletionStatus({ id, status: "loading" })); // Set deletion status to loading
+      const res = await deleteUser(id).unwrap();
+      dispatch(setDeletionStatus({ id, status: "success" })); // Set deletion status to success
+    } catch (err) {
+      dispatch(setDeletionStatus({ id, status: `error: ${err.message}` })); // Set deletion status to error
+      console.error("Error deleting user:", err);
+    }
+  };
+
+  const handleEditClick = (user) => {
+    dispatch(setEditMode({ id: user._id, mode: true })); // Enable edit mode for user
+    dispatch(setEditData({ name: user.name, isAdmin: user.isAdmin })); // Set the data for editing
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    dispatch(
+      setEditData({ [name]: name === "isAdmin" ? value === "true" : value })
+    ); // Update edit data in Redux
+  };
+
+  const handleEditSave = async (id) => {
+    try {
+      const res = await updateUser({ id, ...editData }).unwrap();
+      dispatch(setEditMode({ id, mode: false })); // Disable edit mode after save
+    } catch (err) {
+      console.error("Error updating user:", err);
+    }
+  };
+
+  if (isLoading) {
+    return <p className="text-center mt-10">Loading users...</p>;
+  }
+
+  if (error) {
+    return (
+      <p className="text-center mt-10 text-red-500">Error loading users!</p>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6 md:p-8 flex flex-col items-center">
-      <div className="flex flex-col md:flex-row justify-between items-center w-full max-w-6xl mb-6 space-y-4 md:space-y-0">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
-          All posts
-        </h2>
-      </div>
-
-      <div className="w-full max-w-6xl rounded-lg overflow-x-auto">
-        <table className="min-w-full text-left bg-white text-gray-900 rounded-lg shadow-lg">
+    <div>
+      <div className="w-full max-w-5xl bg-white text-gray-900 rounded-lg shadow-lg overflow-x-auto mx-auto mt-6">
+        <h2 className="text-2xl font-bold p-4 border-b">All Users</h2>
+        <table className="w-full text-sm md:text-base">
           <thead className="bg-gray-100">
             <tr>
-              <th className="py-3 px-4 text-left">Title</th>
-              <th className="py-3 px-4 text-left">Content</th>
-              <th className="py-3 px-4 text-left">Author</th>
-              <th className="py-3 px-4 text-center">Date</th>
+              <th className="py-3 px-4 text-left">Name</th>
+              <th className="py-3 px-4 text-left">Email</th>
+              <th className="py-3 px-4 text-left">Role</th>
+              <th className="py-3 px-4 text-center">Joined</th>
               <th className="py-3 px-4 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {posts.map((post) => (
-              <tr key={post._id} className="border-t">
-                <td className="py-3 px-4">
-                  {editingPost === post._id ? (
+            {data?.users?.map((user, idx) => (
+              <tr key={idx} className="border-t">
+                <td className="py-3 px-4 flex items-center gap-3">
+                  <div className="bg-gray-300 text-gray-700 rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                    {user?.name?.charAt(0)}
+                  </div>
+                  {editMode[user._id] ? (
                     <input
                       type="text"
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      className="border p-1 w-full"
+                      name="name"
+                      value={editData.name}
+                      onChange={handleEditChange}
+                      className="border px-2 py-1 rounded-md"
                     />
                   ) : (
-                    post?.title
+                    user?.name
                   )}
                 </td>
+                <td className="py-3 px-4">{user?.email}</td>
                 <td className="py-3 px-4">
-                  {editingPost === post._id ? (
-                    <textarea
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                      className="border p-1 w-full"
-                    />
+                  {editMode[user._id] ? (
+                    <select
+                      name="isAdmin"
+                      value={editData?.isAdmin}
+                      onChange={handleEditChange}
+                      className="border px-2 py-1 rounded-md"
+                    >
+                      <option value="true">Admin</option>
+                      <option value="false">User</option>
+                    </select>
                   ) : (
-                    post?.content
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        user?.isAdmin
+                          ? "bg-red-200 text-red-800"
+                          : "bg-blue-200 text-blue-800"
+                      }`}
+                    >
+                      {user?.isAdmin ? "Admin" : "User"}
+                    </span>
                   )}
                 </td>
-                <td className="py-3 px-4">{post?.author?.name}</td>
                 <td className="py-3 px-4 text-center">
-                  {post.createdAt && new Date(post.createdAt).toLocaleString()}
+                  {user?.createdAt &&
+                    new Date(user.createdAt).toLocaleDateString("en-GB", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
                 </td>
-                <td className="py-3 px-4 text-center flex justify-center gap-2">
-                  {editingPost === post._id ? (
+                <td className="py-3 px-4 text-center flex flex-col md:flex-row items-center justify-center gap-2">
+                  {editMode[user?._id] ? (
                     <>
                       <button
-                        onClick={handleEditSave}
-                        className="bg-green-100 hover:bg-green-200 text-green-600 p-2 rounded-md"
+                        onClick={() => handleEditSave(user?._id)}
+                        className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-md"
                       >
-                        ✅ Save
+                        Save
                       </button>
                       <button
-                        onClick={handleCancelEdit}
-                        className="bg-yellow-100 hover:bg-yellow-200 text-yellow-600 p-2 rounded-md"
+                        onClick={() =>
+                          dispatch(setEditMode({ id: user._id, mode: false }))
+                        }
+                        className="bg-gray-400 hover:bg-gray-500 text-white p-2 rounded-md"
                       >
-                        ❌ Cancel
+                        Cancel
                       </button>
                     </>
                   ) : (
-                    <button
-                      onClick={() => handleEditClick(post)}
-                      className="bg-blue-100 hover:bg-blue-200 text-blue-600 p-2 rounded-md"
-                    >
-                      ✏️ Edit
-                    </button>
+                    <>
+                      <button
+                        onClick={() => handleEditClick(user)}
+                        className="bg-blue-100 hover:bg-blue-200 text-blue-600 p-2 rounded-md"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user?._id)}
+                        className="bg-red-100 hover:bg-red-200 text-red-600 p-2 rounded-md"
+                        disabled={deletionStatus[user?._id] === "loading"}
+                      >
+                        {deletionStatus[user?._id] === "loading"
+                          ? "Deleting..."
+                          : "🗑️"}
+                      </button>
+                    </>
                   )}
-                  <button
-                    onClick={() => handleDeleteClick(post._id)}
-                    className="bg-red-100 hover:bg-red-200 text-red-600 p-2 rounded-md"
-                  >
-                    {deleteLoading ? "Deleting..." : "🗑️ Delete"}
-                  </button>
+                  {deletionStatus[user?._id] === "success" && (
+                    <div className="text-green-500">
+                      User successfully deleted!
+                    </div>
+                  )}
+                  {deletionStatus[user?._id]?.startsWith("error") && (
+                    <div className="text-red-500">
+                      Error: {deletionStatus[user?._id]}
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}

@@ -5,10 +5,21 @@ import { useUpdateUserMutation } from "@/app/features/api/userSlice/userSlice";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  setModalOpen,
+  resetUserProfileState,
+} from "@/app/features/slice/userProfileSlice/userProfileSlice";
 
-export default function UserModal({ setIsModalOpen, onPrvImage }) {
+export default function UserModal() {
+  const dispatch = useDispatch();
   const [previewImage, setPreviewImage] = useState("");
   const [image, setImage] = useState("");
+
+  const previousImage = useSelector(
+    (state) => state.userProfile.previewProfileImage
+  );
+
   const [updateUser, { isLoading, isSuccess, isError, error }] =
     useUpdateUserMutation();
   const [
@@ -20,19 +31,23 @@ export default function UserModal({ setIsModalOpen, onPrvImage }) {
       error: errorImage,
     },
   ] = useUploadImageMutation();
+
   const { register, handleSubmit, reset } = useForm();
   const { user } = useAuth();
   const userId = user?.user?._id;
 
-  // Success হলে modal বন্ধ ও ফর্ম reset
   useEffect(() => {
-    if (isSuccess) {
-      setIsModalOpen(false);
-      reset();
+    if (!previewImage && previousImage) {
+      setPreviewImage(previousImage);
     }
-  }, [isSuccess, reset, setIsModalOpen]);
 
-  // Image preview
+    if (isSuccess) {
+      dispatch(setModalOpen(false));
+      reset();
+      dispatch(resetUserProfileState());
+    }
+  }, [previewImage, previousImage, isSuccess, dispatch, reset]);
+
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -49,14 +64,13 @@ export default function UserModal({ setIsModalOpen, onPrvImage }) {
     }
   };
 
-  // Form submit
   const onSubmit = async (data) => {
     const updatedData = {
       name: data.name,
       email: data.email,
       password: data.password,
-      profileImage: image,
-      previouesImage: onPrvImage,
+      profileImage: image || previousImage,
+      previousImage: previousImage,
     };
 
     try {
@@ -71,28 +85,21 @@ export default function UserModal({ setIsModalOpen, onPrvImage }) {
       <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-md">
         <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
 
-        {/* General error */}
         {isError && (
           <p className="text-red-500 text-sm mb-2">
             {error?.data?.message || "Something went wrong!"}
           </p>
         )}
-
-        {/* Image Upload Error */}
         {isErrorImage && (
           <p className="text-red-500 text-sm mb-2">
             {errorImage?.data?.message || "Image upload failed!"}
           </p>
         )}
-
-        {/* Image Upload Success */}
         {isSuccessImage && (
           <p className="text-green-500 text-sm mb-2">
             Image uploaded successfully!
           </p>
         )}
-
-        {/* Image Upload Loading */}
         {isLoadingImage && (
           <p className="text-blue-500 text-sm mb-2">Uploading image...</p>
         )}
@@ -135,7 +142,7 @@ export default function UserModal({ setIsModalOpen, onPrvImage }) {
           <div className="flex justify-end gap-4 mt-6">
             <button
               type="button"
-              onClick={() => setIsModalOpen(false)}
+              onClick={() => dispatch(setModalOpen(false))}
               className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition"
               disabled={isLoading}
             >

@@ -4,27 +4,6 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
 
-const dummyPosts = [
-  {
-    _id: "6810ab41ecfb6508542b79e6",
-    title: "Dummy Post Title",
-    content:
-      "This is a sample post content. It is just a placeholder for testing without any API.",
-
-    createdAt: new Date().toISOString(),
-    author: {
-      name: "Dummy Author",
-    },
-  },
-];
-
-const dummyComments = [
-  { id: 1, text: "Great post!", author: "Alice" },
-  { id: 2, text: "Thanks for sharing.", author: "Bob" },
-  { id: 3, text: "Very helpful!", author: "Charlie" },
-  { id: 4, text: "Loved it.", author: "David" },
-];
-
 const Page = () => {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");

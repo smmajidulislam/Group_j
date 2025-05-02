@@ -1,24 +1,33 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import Image from "next/image";
 import { useCreatePostMutation } from "@/app/features/api/postSlice/postSlice";
 import { useUploadImageMutation } from "@/app/features/api/imageuoloadoncloud/img";
+import {
+  setOpenPostModal,
+  setImage,
+  resetPostData,
+  setImageLoading,
+  setImageUploadStatus,
+  setPreviewImage,
+} from "@/app/features/slice/createPostSlice/createPostSlice";
 
 export default function CreatePostButton() {
-  const [openPostModal, setOpenPostModal] = useState(false);
-  const [image, setImage] = useState("");
-  const [previewImage, setPreviewImage] = useState("");
-  const [createPost, { isLoading }] = useCreatePostMutation();
-  const [
-    imageUpload,
-    {
-      isLoading: isLoadingImage,
-      isSuccess: isSuccessImage,
-      isError: isErrorImage,
-      error: errorImage,
-    },
-  ] = useUploadImageMutation();
+  const dispatch = useDispatch();
+  const {
+    openPostModal,
+    image,
+    previewImage,
+    isLoading,
+    isErrorImage,
+    errorImage,
+  } = useSelector((state) => state.createPost);
+
+  const [createPost] = useCreatePostMutation();
+  const [imageUpload] = useUploadImageMutation();
 
   const {
     register,
@@ -31,15 +40,26 @@ export default function CreatePostButton() {
     const file = e.target.files[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
-      setPreviewImage(imageUrl);
+      dispatch(setPreviewImage(imageUrl));
       const formData = new FormData();
       formData.append("file", file);
       formData.append("upload_preset", "Practis");
+
       try {
+        dispatch(setImageLoading(true));
         const res = await imageUpload(formData).unwrap();
-        setImage(res?.secure_url);
+        dispatch(setImage(res?.secure_url));
+        dispatch(setImageUploadStatus({ isSuccess: true, isError: false }));
       } catch (err) {
-        console.error("Image upload failed:", err);
+        dispatch(
+          setImageUploadStatus({
+            isSuccess: false,
+            isError: true,
+            error: err.message,
+          })
+        );
+      } finally {
+        dispatch(setImageLoading(false));
       }
     }
   };
@@ -53,25 +73,15 @@ export default function CreatePostButton() {
 
     try {
       await createPost(postData).unwrap();
-      reset(); // reset the form
-      setImage(null);
-      setPreviewImage("");
-      setOpenPostModal(false); // close modal
+      reset();
+      dispatch(resetPostData());
     } catch (err) {
       console.error("Failed to create post:", err);
     }
   };
 
   useEffect(() => {
-    if (openPostModal) {
-      // Disable body scroll when modal is open
-      document.body.style.overflow = "hidden";
-    } else {
-      // Enable body scroll when modal is closed
-      document.body.style.overflow = "auto";
-    }
-
-    // Cleanup: Reset body overflow when component is unmounted
+    document.body.style.overflow = openPostModal ? "hidden" : "auto";
     return () => {
       document.body.style.overflow = "auto";
     };
@@ -80,7 +90,7 @@ export default function CreatePostButton() {
   return (
     <div className="text-right">
       <button
-        onClick={() => setOpenPostModal(true)}
+        onClick={() => dispatch(setOpenPostModal(true))}
         className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
       >
         ➕ Create New Post
@@ -145,34 +155,27 @@ export default function CreatePostButton() {
                 </div>
               )}
 
-              {isLoadingImage && (
+              {isLoading && (
                 <p className="text-blue-600 text-sm mt-1">Uploading image...</p>
-              )}
-
-              {isSuccessImage && (
-                <p className="text-green-600 text-sm mt-1">
-                  Image uploaded successfully.
-                </p>
               )}
 
               {isErrorImage && (
                 <p className="text-red-600 text-sm mt-1">
-                  Failed to upload image:{" "}
-                  {errorImage?.data?.error?.message || "Unknown error"}
+                  Failed to upload image: {errorImage || "Unknown error"}
                 </p>
               )}
 
               <div className="flex justify-end gap-4 mt-6">
                 <button
                   type="button"
-                  onClick={() => setOpenPostModal(false)}
+                  onClick={() => dispatch(resetPostData())}
                   className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading || isLoadingImage}
+                  disabled={isLoading}
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                 >
                   {isLoading ? "Posting..." : "Post"}

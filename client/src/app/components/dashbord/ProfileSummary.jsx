@@ -1,18 +1,29 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
 import UserModal from "./UserModal";
 import { useAuth } from "@/app/contexts/authContext/AuthContext";
 import { useGetUserByIdQuery } from "@/app/features/api/userSlice/userSlice";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  setModalOpen,
+  setPreviewProfileImage,
+} from "@/app/features/slice/userProfileSlice/userProfileSlice";
 
 export default function ProfileSummary() {
+  const dispatch = useDispatch();
   const { user } = useAuth();
   const userId = user?.user?._id;
+
   const { data, isLoading, isError } = useGetUserByIdQuery(userId, {
     skip: !userId,
   });
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const isModalOpen = useSelector((state) => state.userProfile.isModalOpen);
+
+  const handleOpenModal = () => {
+    dispatch(setPreviewProfileImage(data?.profileImage));
+    dispatch(setModalOpen(true));
+  };
 
   if (isLoading) {
     return <p className="text-center">Loading profile...</p>;
@@ -41,19 +52,14 @@ export default function ProfileSummary() {
         <p className="text-gray-700">Total Posts: {data?.totalPosts}</p>
         <p className="text-gray-700">Total Likes: {data?.totalLikes}</p>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleOpenModal}
           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
         >
           Edit Profile
         </button>
       </div>
 
-      {isModalOpen && (
-        <UserModal
-          setIsModalOpen={setIsModalOpen}
-          onPrvImage={data?.profileImage}
-        />
-      )}
+      {isModalOpen && <UserModal />}
     </div>
   );
 }
