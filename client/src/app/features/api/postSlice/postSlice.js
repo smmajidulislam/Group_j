@@ -2,11 +2,11 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import Cookies from "js-cookie";
 
-// Define the API
 export const postApi = createApi({
   reducerPath: "postApi",
+
   baseQuery: fetchBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_BASE_URL}`, // Base URL for API
+    baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
     prepareHeaders: (headers) => {
       const userCookie = Cookies.get("user");
       if (userCookie) {
@@ -22,16 +22,40 @@ export const postApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ["Post"], // Tag types for invalidating cache
+
+  tagTypes: ["Post"],
+
   endpoints: (builder) => ({
     getPosts: builder.query({
       query: (page) => `/posts?page=${page}`,
-      providesTags: (result, error, page) =>
-        result ? [{ type: "Post", id: "ALL" }] : [], // Use "ALL" to invalidate all posts
+      providesTags: (result) =>
+        result?.posts
+          ? [
+              ...result.posts.map((post) => ({
+                type: "Post",
+                id: post._id,
+              })),
+              { type: "Post", id: "LIST" },
+            ]
+          : [{ type: "Post", id: "LIST" }],
     }),
 
     getPostById: builder.query({
       query: (id) => `/posts/user/${id}`,
+      providesTags: (result) =>
+        result?.map
+          ? [
+              ...result.map((post) => ({
+                type: "Post",
+                id: post._id,
+              })),
+              { type: "Post", id: "LIST" },
+            ]
+          : [{ type: "Post", id: "LIST" }],
+    }),
+
+    postById: builder.query({
+      query: (id) => `/posts/${id}`,
       providesTags: (result) =>
         result ? [{ type: "Post", id: result._id }] : [],
     }),
@@ -42,7 +66,7 @@ export const postApi = createApi({
         method: "POST",
         body: postData,
       }),
-      invalidatesTags: ["Post"], // Invalidate all posts after creating a post
+      invalidatesTags: [{ type: "Post", id: "LIST" }],
     }),
 
     updatePost: builder.mutation({
@@ -52,8 +76,8 @@ export const postApi = createApi({
         body: data,
       }),
       invalidatesTags: (result, error, { id }) => [
-        { type: "Post", id }, // Invalidating specific post cache
-        { type: "Post", id: "ALL" }, // Invalidate all posts cache to refetch
+        { type: "Post", id },
+        { type: "Post", id: "LIST" },
       ],
     }),
 
@@ -62,7 +86,10 @@ export const postApi = createApi({
         url: `/posts/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: (result, error, id) => [{ type: "Post", id }],
+      invalidatesTags: (result, error, id) => [
+        { type: "Post", id },
+        { type: "Post", id: "LIST" },
+      ],
     }),
 
     likePost: builder.mutation({
@@ -70,7 +97,10 @@ export const postApi = createApi({
         url: `/posts/${id}/like`,
         method: "PUT",
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: "Post", id }],
+      invalidatesTags: (result, error, id) => [
+        { type: "Post", id },
+        { type: "Post", id: "LIST" }, // ✅ এই লাইন গুরুত্বপূর্ণ
+      ],
     }),
 
     dislikePost: builder.mutation({
@@ -78,7 +108,10 @@ export const postApi = createApi({
         url: `/posts/${id}/dislike`,
         method: "PUT",
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: "Post", id }],
+      invalidatesTags: (result, error, id) => [
+        { type: "Post", id },
+        { type: "Post", id: "LIST" }, // ✅ এই লাইন গুরুত্বপূর্ণ
+      ],
     }),
   }),
 });
@@ -86,6 +119,7 @@ export const postApi = createApi({
 export const {
   useGetPostsQuery,
   useGetPostByIdQuery,
+  usePostByIdQuery,
   useCreatePostMutation,
   useUpdatePostMutation,
   useDeletePostMutation,
