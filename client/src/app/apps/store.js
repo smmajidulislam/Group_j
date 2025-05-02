@@ -10,6 +10,7 @@ import userProfileSlice from "@/app/features/slice/userProfileSlice/userProfileS
 import postSlice from "@/app/features/slice/publicPostSlice/publicPostSlice";
 import userSlice from "@/app/features/slice/userMangementSlice/userMangementSlice";
 import postSliceee from "@/app/features/slice/postMangementSlice/postMangementSlice";
+import searchSlice from "@/app/features/api/searchSlice/searchSlice";
 
 const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ const store = configureStore({
     [postApi.reducerPath]: postApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
     [imageApi.reducerPath]: imageApi.reducer,
+    [searchSlice.reducerPath]: searchSlice.reducer,
     postUIState: postUIStateSlice,
     createPost: postSlices,
     userProfile: userProfileSlice,
@@ -31,7 +33,8 @@ const store = configureStore({
       .concat(commentApi.middleware)
       .concat(postApi.middleware)
       .concat(userApi.middleware)
-      .concat(imageApi.middleware),
+      .concat(imageApi.middleware)
+      .concat(searchSlice.middleware),
 });
 
 export default store;
