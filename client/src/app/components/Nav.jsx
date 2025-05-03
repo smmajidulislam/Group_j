@@ -1,11 +1,52 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../contexts/authContext/AuthContext";
+import { useSearchPostsQuery } from "../features/api/searchSlice/searchSlice";
+import { useRouter } from "next/navigation"; // for redirection
 
 const Nav = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, isLoading, singOutUser, logout } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
+  const { user, isLoading, logout } = useAuth();
+  const router = useRouter();
+  // RTK Query call with skip if search term is empty
+  const {
+    data: posts,
+    isLoading: isSearching,
+    isError,
+  } = useSearchPostsQuery(searchTerm, {
+    skip: searchTerm.trim() === "",
+  });
+
+  const filteredSuggestions =
+    posts
+      ?.map((post) => ({
+        title: post.title,
+        _id: post._id,
+      }))
+      .slice(0, 5) || [];
+
+  // Close suggestion box when clicked outside
+  const searchRef = useRef();
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setSearchTerm("");
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleSearch = () => {
+    if (searchTerm.trim() !== "") {
+      router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+      setSearchTerm("");
+    }
+  };
 
   const renderSkeleton = () => (
     <div className="hidden md:flex space-x-4 animate-pulse">
@@ -16,15 +57,11 @@ const Nav = () => {
   );
 
   return (
-    <nav className="bg-gray-800 text-white sticky top-0 z-999">
+    <nav className="bg-gray-800 text-white sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <div className="flex-shrink-0">
-            {/* Add your logo here if needed */}
-          </div>
+          <div className="flex-shrink-0">LOGO</div>
 
-          {/* Desktop Menu */}
           {isLoading ? (
             renderSkeleton()
           ) : (
@@ -38,7 +75,7 @@ const Nav = () => {
               >
                 Service
               </Link>
-              {!user && (
+              {!user?.token && (
                 <>
                   <Link
                     href="/login"
@@ -76,7 +113,7 @@ const Nav = () => {
                   Admin Dashboard
                 </Link>
               )}
-              {user && (
+              {user?.token && (
                 <button
                   className="hover:bg-gray-700 px-3 py-2 rounded"
                   onClick={() => logout()}
@@ -87,16 +124,59 @@ const Nav = () => {
             </div>
           )}
 
-          {/* Search */}
-          <div className="hidden md:flex items-center">
-            <input
-              type="text"
-              placeholder="Search"
-              className="bg-gray-900 text-sm px-4 py-2 rounded-l focus:outline-none focus:ring"
-            />
-            <button className="bg-teal-500 px-4 py-2 rounded-r hover:bg-teal-600">
-              Search
-            </button>
+          {/* Search Box */}
+          <div
+            ref={searchRef}
+            className="hidden md:flex flex-col items-start relative"
+          >
+            <div className="flex">
+              <input
+                type="text"
+                placeholder="Search"
+                onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchTerm}
+                className="bg-gray-900 text-sm px-4 py-2 rounded-l focus:outline-none focus:ring"
+              />
+              <button
+                className="bg-teal-500 px-4 py-2 rounded-r hover:bg-teal-600"
+                onClick={handleSearch}
+              >
+                Search
+              </button>
+            </div>
+            {searchTerm && (
+              <div className="absolute top-full mt-1 bg-white text-black rounded-md shadow-lg w-full z-50 border border-gray-300">
+                {isSearching ? (
+                  <div className="px-4 py-2 text-sm text-gray-500">
+                    Searching...
+                  </div>
+                ) : isError ? (
+                  <div className="px-4 py-2 text-sm text-red-500">
+                    Error fetching posts
+                  </div>
+                ) : filteredSuggestions.length === 0 ? (
+                  <div className="px-4 py-2 text-sm text-gray-500">
+                    No suggestions
+                  </div>
+                ) : (
+                  filteredSuggestions?.map((item, index) => (
+                    <div
+                      key={index}
+                      className="px-4 py-2 text-sm hover:bg-gray-300 cursor-pointer transition-all duration-150 border-b"
+                      onClick={() => {
+                        setSearchTerm(item?.title);
+                        router.push(`/post/?id=${item?._id}`);
+                        setSearchTerm("");
+                      }}
+                    >
+                      {item.length > 30
+                        ? item?.title.slice(0, 30) + "..."
+                        : item?.title}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -147,7 +227,7 @@ const Nav = () => {
               >
                 Service
               </Link>
-              {!user && (
+              {!user?.token && (
                 <>
                   <Link
                     href="/login"
@@ -185,7 +265,7 @@ const Nav = () => {
                   Admin Dashboard
                 </Link>
               )}
-              {user && (
+              {user?.token && (
                 <button
                   className="hover:bg-gray-700 px-3 py-2 rounded"
                   onClick={() => logout()}

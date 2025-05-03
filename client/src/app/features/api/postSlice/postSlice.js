@@ -1,78 +1,125 @@
+"use client";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import Cookies from "js-cookie";
 
 export const postApi = createApi({
   reducerPath: "postApi",
-  baseQuery: fetchBaseQuery({ baseUrl: `${process.env.NEXT_PUBLIC_BASE_URL}` }),
+
+  baseQuery: fetchBaseQuery({
+    baseUrl: `${process.env.NEXT_PUBLIC_BASE_URL}`,
+    prepareHeaders: (headers) => {
+      const userCookie = Cookies.get("user");
+      if (userCookie) {
+        try {
+          const userData = JSON.parse(userCookie);
+          if (userData?.token) {
+            headers.set("authorization", `Bearer ${userData.token}`);
+          }
+        } catch (error) {
+          console.error("Error parsing user cookie:", error);
+        }
+      }
+      return headers;
+    },
+  }),
+
+  tagTypes: ["Post"],
+
   endpoints: (builder) => ({
-    // Fetch all posts
     getPosts: builder.query({
-      query: () => "/posts",
+      query: (page) => `/posts?page=${page}`,
+      providesTags: (result) =>
+        result?.posts
+          ? [
+              ...result.posts.map((post) => ({
+                type: "Post",
+                id: post._id,
+              })),
+              { type: "Post", id: "LIST" },
+            ]
+          : [{ type: "Post", id: "LIST" }],
     }),
 
-    // Search posts
-    searchPosts: builder.query({
-      query: (searchTerm) => `/posts/search?query=${searchTerm}`,
-    }),
-
-    // Fetch posts by user ID
-    getPostsByUser: builder.query({
-      query: (userId) => `/posts/user/${userId}`,
-    }),
-
-    // Fetch post by ID
     getPostById: builder.query({
-      query: (id) => `/posts/${id}`,
+      query: (id) => `/posts/user/${id}`,
+      providesTags: (result) =>
+        result?.map
+          ? [
+              ...result.map((post) => ({
+                type: "Post",
+                id: post._id,
+              })),
+              { type: "Post", id: "LIST" },
+            ]
+          : [{ type: "Post", id: "LIST" }],
     }),
 
-    // Create a new post (protected)
+    postById: builder.query({
+      query: (id) => `/posts/${id}`,
+      providesTags: (result) =>
+        result ? [{ type: "Post", id: result._id }] : [],
+    }),
+
     createPost: builder.mutation({
       query: (postData) => ({
         url: "/posts",
         method: "POST",
         body: postData,
       }),
+      invalidatesTags: [{ type: "Post", id: "LIST" }],
     }),
 
-    // Update a post (protected)
     updatePost: builder.mutation({
-      query: ({ id, postData }) => ({
+      query: ({ id, ...data }) => ({
         url: `/posts/${id}`,
         method: "PUT",
-        body: postData,
+        body: data,
       }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Post", id },
+        { type: "Post", id: "LIST" },
+      ],
     }),
 
-    // Delete a post (protected)
     deletePost: builder.mutation({
       query: (id) => ({
         url: `/posts/${id}`,
         method: "DELETE",
       }),
+      invalidatesTags: (result, error, id) => [
+        { type: "Post", id },
+        { type: "Post", id: "LIST" },
+      ],
     }),
 
-    // Like a post (protected)
     likePost: builder.mutation({
       query: (id) => ({
         url: `/posts/${id}/like`,
         method: "PUT",
       }),
+      invalidatesTags: (result, error, id) => [
+        { type: "Post", id },
+        { type: "Post", id: "LIST" }, // ✅ এই লাইন গুরুত্বপূর্ণ
+      ],
     }),
 
-    // Dislike a post (protected)
     dislikePost: builder.mutation({
       query: (id) => ({
         url: `/posts/${id}/dislike`,
         method: "PUT",
       }),
+      invalidatesTags: (result, error, id) => [
+        { type: "Post", id },
+        { type: "Post", id: "LIST" }, // ✅ এই লাইন গুরুত্বপূর্ণ
+      ],
     }),
   }),
 });
 
 export const {
   useGetPostsQuery,
-  useSearchPostsQuery,
-  useGetPostsByUserQuery,
   useGetPostByIdQuery,
+  usePostByIdQuery,
   useCreatePostMutation,
   useUpdatePostMutation,
   useDeletePostMutation,

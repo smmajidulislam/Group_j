@@ -3,9 +3,12 @@ import { createContext, useContext, useEffect, useState } from "react";
 import Cookies from "js-cookie";
 const AuthContext = createContext(null);
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState({
+    role:"user"
+  });
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -16,10 +19,12 @@ export const AuthProvider = ({ children }) => {
     }
     setIsLoading(false);
   }, []);
+  
   const logout = () => {
     Cookies.remove("user");
     setUser(null);
     router.push("/login");
+    toast.success("Logged out successfully! 👋");
   };
 
   return (

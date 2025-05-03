@@ -6,6 +6,12 @@ const Post = require('../models/post.model');
 // @access  Public
 exports.getCommentsByPost = async (req, res) => {
     try {
+        if (req.user?.isSuspended) {
+            return res
+                .status(403)
+                .json({ message: 'Suspended users cannot view comments' });
+        }
+
         const comments = await Comment.find({ post: req.params.postId })
             .populate('author', 'name')
             .sort({ createdAt: -1 });
@@ -33,6 +39,12 @@ exports.getCommentsByPost = async (req, res) => {
 // @access  Private
 exports.createComment = async (req, res) => {
     try {
+        if (req.user?.isSuspended) {
+            return res
+                .status(403)
+                .json({ message: 'Suspended users cannot create comments' });
+        }
+
         const { postId, content } = req.body;
 
         // Check if post exists
@@ -79,9 +91,18 @@ exports.getAllCommentsByPostId = async (req, res) => {
             return res.status(400).json({ message: 'Post ID is required' });
         }
 
-        const comments = await Comment.find({ post: postId })
+        let comments = await Comment.find({ post: postId })
             .populate('author', 'name')
             .sort({ createdAt: -1 });
+
+        // Filter out comments made by suspended users or visible to suspended users
+        if (req.user?.isSuspended) {
+            return res
+                .status(403)
+                .json({ message: 'Suspended users cannot view comments' });
+        }
+
+        comments = comments.filter(comment => !comment.author.isSuspended);
 
         res.status(200).json(
             comments.map(comment => ({
@@ -92,7 +113,7 @@ exports.getAllCommentsByPostId = async (req, res) => {
                     name: comment.author.name
                 },
                 createdAt: comment.createdAt,
-                postId: comment.post // include post ID if needed
+                postId: comment.post
             }))
         );
     } catch (error) {
@@ -106,6 +127,12 @@ exports.getAllCommentsByPostId = async (req, res) => {
 // @access  Private
 exports.updateComment = async (req, res) => {
     try {
+        if (req.user?.isSuspended) {
+            return res
+                .status(403)
+                .json({ message: 'Suspended users cannot update comments' });
+        }
+
         const comment = await Comment.findById(req.params.id);
 
         if (!comment) {
@@ -148,6 +175,12 @@ exports.updateComment = async (req, res) => {
 // @access  Private
 exports.deleteComment = async (req, res) => {
     try {
+        if (req.user?.isSuspended) {
+            return res
+                .status(403)
+                .json({ message: 'Suspended users cannot delete comments' });
+        }
+
         const comment = await Comment.findById(req.params.id);
 
         if (!comment) {

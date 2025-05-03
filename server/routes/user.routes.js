@@ -5,7 +5,8 @@ const {
     getUsers,
     getUserById,
     updateUser,
-    deleteUser
+    deleteUser,
+    toggleUserSuspension
 } = require('../controllers/user.controller');
 
 // All routes are protected
@@ -13,5 +14,6 @@ router.get('/', protect, admin, getUsers);
 router.get('/:id', protect, getUserById);
 router.put('/:id', protect, updateUser);
 router.delete('/:id', protect, deleteUser);
+router.put('/:id/suspend', protect, admin, toggleUserSuspension);
 
 module.exports = router;
