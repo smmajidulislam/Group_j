@@ -34,7 +34,7 @@ export default function ProfileSummary() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row items-center gap-6 bg-white p-6 mb-6 rounded-xl shadow-md">
+    <div className="flex flex-col md:flex-row items-center gap-6 bg-white p-6 mb-6 rounded-xl shadow-md animate__animated animate__backInDown animate__duration-4000 animate__delay-1s">
       <div className="relative w-32 h-32">
         <Image
           src={data?.profileImage || "/asests/profile.jpg"}

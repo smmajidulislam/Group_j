@@ -87,7 +87,7 @@ export default function CreatePostButton() {
   }, [openPostModal]);
 
   return (
-    <div className="text-right">
+    <div className="flex justify-center mb-2 z-50 px-4">
       <button
         onClick={() => dispatch(setOpenPostModal(true))}
         className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -96,7 +96,7 @@ export default function CreatePostButton() {
       </button>
 
       {openPostModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 overflow-hidden">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 overflow-auto">
           <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-md max-h-[90vh] overflow-y-auto">
             <form
               onSubmit={handleSubmit(onSubmit)}

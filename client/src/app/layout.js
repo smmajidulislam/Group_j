@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import ReduxProviders from "./components/Redux/ReduxProviders";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "animate.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

@@ -4,10 +4,12 @@
   --background: #ffffff;
   --foreground: #171717;
 }
+
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
 }
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -21,6 +23,8 @@ input[type="number"]::-webkit-outer-spin-button {
     --foreground: #ededed;
   }
 }
+
+/* Background Move Animation */
 @keyframes moveBackground {
   0% {
     background-position: top center;
@@ -29,6 +33,7 @@ input[type="number"]::-webkit-outer-spin-button {
     background-position: bottom center;
   }
 }
+
 body {
   background-image: url("../../public/asests/bg.jpg");
   background-size: cover;

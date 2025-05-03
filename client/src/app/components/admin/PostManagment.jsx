@@ -19,7 +19,7 @@ export default function PostManagement() {
   const dispatch = useDispatch();
   const { posts, currentPage, editingPost, deleteLoading } = useSelector(
     (state) => state.postManagement
-  ); // Access data from the Redux store
+  );
 
   const { data, error, isLoading } = useGetPostsQuery(currentPage);
   const [updatePost] = useUpdatePostMutation();
@@ -75,6 +75,14 @@ export default function PostManagement() {
     setEditContent("");
   };
 
+  const truncateText = (text, wordLimit) => {
+    const words = text?.split(" ");
+    if (words?.length > wordLimit) {
+      return words.slice(0, wordLimit).join(" ") + "...";
+    }
+    return text;
+  };
+
   const isPrevDisabled = currentPage === 1;
   const isNextDisabled = currentPage === data?.pages;
 
@@ -112,7 +120,7 @@ export default function PostManagement() {
                       className="border p-1 w-full"
                     />
                   ) : (
-                    post?.title
+                    truncateText(post?.title, 100)
                   )}
                 </td>
                 <td className="py-3 px-4">
@@ -123,7 +131,7 @@ export default function PostManagement() {
                       className="border p-1 w-full"
                     />
                   ) : (
-                    post?.content
+                    truncateText(post?.content, 10)
                   )}
                 </td>
                 <td className="py-3 px-4">{post?.author?.name}</td>

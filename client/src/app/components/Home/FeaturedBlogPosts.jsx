@@ -19,102 +19,91 @@ export default function FeaturedBlogPosts() {
 
   const formatDate = (date) => {
     const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
-    return `${day}-${month}-${year}`;
+    return `${d.getDate().toString().padStart(2, "0")}-${(d.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${d.getFullYear()}`;
   };
+
+  const userCookie = Cookies.get("user");
+  const userData = userCookie ? JSON.parse(userCookie) : null;
 
   const isPrevDisabled = currentPage === 1;
   const isNextDisabled = currentPage === data?.pages;
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
+  const handlePageChange = (page) => setCurrentPage(page);
 
-  // Get user data from cookies
-  const userCookie = Cookies.get("user");
-  const userData = userCookie ? JSON.parse(userCookie) : null;
-
-  // Handling like click
-  // Like handler
   const handleLike = async (postId) => {
-    if (!userData) {
-      alert("Please log in to like the post.");
-      return;
-    }
+    if (!userData) return alert("Please log in to like the post.");
 
-    const likedPosts = Array.isArray(userData.likedPosts)
-      ? userData.likedPosts
-      : [];
-    const dislikedPosts = Array.isArray(userData.dislikedPosts)
-      ? userData.dislikedPosts
-      : [];
+    const likedPosts = userData.likedPosts || [];
+    const dislikedPosts = userData.dislikedPosts || [];
 
-    const hasLiked = likedPosts.includes(postId);
-    const hasDisliked = dislikedPosts.includes(postId);
+    if (likedPosts.includes(postId))
+      return alert("You already liked this post.");
 
-    if (hasLiked) {
-      alert("You already liked this post.");
-      return;
-    }
-
-    // যদি আগে dislike করে থাকে তাহলে সেটা রিমুভ করো
-    if (hasDisliked) {
+    if (dislikedPosts.includes(postId)) {
       dislikedPosts.splice(dislikedPosts.indexOf(postId), 1);
     }
 
     await likePost(postId);
-
-    const updatedUserData = {
-      ...userData,
-      likedPosts: [...likedPosts, postId],
-      dislikedPosts: dislikedPosts, // আপডেটেড dislike list
-    };
-
-    Cookies.set("user", JSON.stringify(updatedUserData));
+    Cookies.set(
+      "user",
+      JSON.stringify({
+        ...userData,
+        likedPosts: [...likedPosts, postId],
+        dislikedPosts,
+      })
+    );
   };
 
-  // Dislike handler
   const handleDislike = async (postId) => {
-    if (!userData) {
-      alert("Please log in to dislike the post.");
-      return;
-    }
+    if (!userData) return alert("Please log in to dislike the post.");
 
-    const likedPosts = Array.isArray(userData.likedPosts)
-      ? userData.likedPosts
-      : [];
-    const dislikedPosts = Array.isArray(userData.dislikedPosts)
-      ? userData.dislikedPosts
-      : [];
+    const likedPosts = userData.likedPosts || [];
+    const dislikedPosts = userData.dislikedPosts || [];
 
-    const hasDisliked = dislikedPosts.includes(postId);
-    const hasLiked = likedPosts.includes(postId);
+    if (dislikedPosts.includes(postId))
+      return alert("You already disliked this post.");
 
-    if (hasDisliked) {
-      alert("You already disliked this post.");
-      return;
-    }
-
-    // যদি আগে like করে থাকে তাহলে সেটা রিমুভ করো
-    if (hasLiked) {
+    if (likedPosts.includes(postId)) {
       likedPosts.splice(likedPosts.indexOf(postId), 1);
     }
 
     await dislikePost(postId);
-
-    const updatedUserData = {
-      ...userData,
-      dislikedPosts: [...dislikedPosts, postId],
-      likedPosts: likedPosts, // আপডেটেড like list
-    };
-
-    Cookies.set("user", JSON.stringify(updatedUserData));
+    Cookies.set(
+      "user",
+      JSON.stringify({
+        ...userData,
+        dislikedPosts: [...dislikedPosts, postId],
+        likedPosts,
+      })
+    );
   };
 
   if (isLoading) {
-    return <p className="text-gray-400 text-center py-10">লোড হচ্ছে...</p>;
+    return (
+      <section className="px-4 py-12 max-w-7xl mx-auto">
+        <h2 className="text-xl text-gray-300 font-semibold mb-8">Blog posts</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {[...Array(6)].map((_, i) => (
+            <div
+              key={i}
+              className="flex flex-col border border-gray-700 rounded-lg p-4 bg-gray-900 animate-pulse"
+            >
+              <div className="w-full h-40 bg-gray-700 rounded-md mb-3" />
+              <div className="h-4 bg-gray-700 w-1/2 mb-2 rounded" />
+              <div className="h-4 bg-gray-700 w-3/4 mb-2 rounded" />
+              <div className="h-4 bg-gray-700 w-full mb-2 rounded" />
+              <div className="h-4 bg-gray-700 w-2/3 mb-4 rounded" />
+              <div className="flex gap-3">
+                <div className="h-8 w-20 bg-gray-700 rounded-md" />
+                <div className="h-8 w-20 bg-gray-700 rounded-md" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
   }
 
   if (isError) {
@@ -129,12 +118,11 @@ export default function FeaturedBlogPosts() {
     <section className="px-4 py-12 max-w-7xl mx-auto">
       <h2 className="text-xl text-gray-300 font-semibold mb-8">Blog posts</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {posts.map((post, index) => (
+        {posts.map((post) => (
           <div
-            key={index}
-            className="flex flex-col border border-gray-700 rounded-lg p-4 bg-gray-900"
+            key={post._id}
+            className="flex flex-col border border-gray-700 rounded-lg p-4 bg-gray-900 animate__animated animate__rotateIn animate__duration-4000 animate__delay-1s"
           >
-            {/* Post image */}
             {post?.imageUrl ? (
               <Image
                 src={post.imageUrl}
@@ -149,48 +137,36 @@ export default function FeaturedBlogPosts() {
               </div>
             )}
 
-            {/* Meta info */}
-            <div className="flex items-center text-sm text-gray-400 space-x-4 mb-2">
+            <div className="flex items-center text-sm text-gray-400 space-x-4 mb-2 ">
               <span className="font-medium">{post.author.name}</span>
               <span>{formatDate(post.createdAt)}</span>
             </div>
 
-            {/* Post title */}
             <h3 className="text-lg font-semibold text-gray-200 mb-2">
               {post.title}
             </h3>
 
-            {/* Content preview */}
             <p className="text-gray-400 mb-4 line-clamp-3">{post.content}</p>
 
-            {/* Likes and Comments */}
             <div className="flex items-center text-sm text-gray-400 gap-6 mb-4">
-              <div className="flex items-center gap-1">
-                <button
-                  className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full shadow-sm transition duration-200 flex items-center space-x-2"
-                  onClick={() => handleLike(post._id, post.likes)}
-                >
-                  <ThumbsUp className="w-4 h-4" />
-                  <span>{post.likes || 0}</span>
-                </button>
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full shadow-sm transition duration-200 flex items-center space-x-2"
-                  onClick={() => handleDislike(post._id)}
-                >
-                  <ThumbsDown className="w-4 h-4" />
-                  <span>{post.dislikes || 0}</span>
-                </button>
-              </div>
+              <button
+                className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full shadow-sm flex items-center gap-1"
+                onClick={() => handleLike(post._id)}
+              >
+                <ThumbsUp className="w-4 h-4" />
+                <span>{post.likes || 0}</span>
+              </button>
+              <button
+                className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full shadow-sm flex items-center gap-1"
+                onClick={() => handleDislike(post._id)}
+              >
+                <ThumbsDown className="w-4 h-4" />
+                <span>{post.dislikes || 0}</span>
+              </button>
             </div>
 
-            {/* Read more */}
             <Link
-              href={{
-                pathname: "/post",
-                query: { id: post._id },
-              }}
+              href={{ pathname: "/post", query: { id: post._id } }}
               className="text-blue-500 font-medium hover:underline text-sm flex items-center gap-1"
             >
               Read more <span>&rarr;</span>
@@ -203,7 +179,7 @@ export default function FeaturedBlogPosts() {
       <div className="flex justify-center mt-3 space-x-2">
         <button
           className={`px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-md ${
-            isPrevDisabled ? "cursor-not-allowed" : ""
+            isPrevDisabled ? "cursor-not-allowed opacity-50" : ""
           }`}
           onClick={() => !isPrevDisabled && handlePageChange(currentPage - 1)}
           disabled={isPrevDisabled}
@@ -228,7 +204,7 @@ export default function FeaturedBlogPosts() {
 
         <button
           className={`px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-md ${
-            isNextDisabled ? "cursor-not-allowed" : ""
+            isNextDisabled ? "cursor-not-allowed opacity-50" : ""
           }`}
           onClick={() => !isNextDisabled && handlePageChange(currentPage + 1)}
           disabled={isNextDisabled}

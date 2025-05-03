@@ -22,6 +22,7 @@ export default function DashboardPage() {
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
+
   const handleDeletePost = async (id) => {
     try {
       await deletePost(id).unwrap();
@@ -29,8 +30,10 @@ export default function DashboardPage() {
       console.error("Error deleting post:", err);
     }
   };
+
   const isPrevDisabled = currentPage === 1;
   const isNextDisabled = currentPage === data?.pages;
+
   return (
     <div className="space-y-6">
       <div className="max-w-4xl mx-auto p-4">
@@ -69,7 +72,7 @@ export default function DashboardPage() {
 
                 return (
                   <div key={post._id}>
-                    <div className="bg-white border border-gray-200 p-5 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer">
+                    <div className="bg-white border border-gray-200 p-5 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer animate__animated animate__rotateIn animate__duration-4000 animate__delay-1s">
                       <h3 className="text-xl font-semibold mb-2 truncate">
                         {post.title}
                       </h3>

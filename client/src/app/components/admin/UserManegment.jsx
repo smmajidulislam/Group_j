@@ -3,6 +3,7 @@ import {
   useDeleteUserMutation,
   useGetUsersQuery,
   useUpdateUserMutation,
+  useSuspendUserMutation,
 } from "@/app/features/api/userSlice/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -22,6 +23,7 @@ export default function UserManagement() {
   const { data, error, isLoading } = useGetUsersQuery(currentPage);
   const [deleteUser] = useDeleteUserMutation();
   const [updateUser] = useUpdateUserMutation();
+  const [suspendUser] = useSuspendUserMutation();
 
   const handlePageChange = (page) => {
     dispatch(setCurrentPage(page));
@@ -66,15 +68,19 @@ export default function UserManagement() {
     }
   };
 
-  if (isLoading) {
-    return <p className="text-center mt-10">Loading users...</p>;
-  }
+  const handleSuspendUser = async (id) => {
+    try {
+      await suspendUser(id).unwrap();
+    } catch (err) {
+      console.error("Error suspending user:", err);
+    }
+  };
 
-  if (error) {
+  if (isLoading) return <p className="text-center mt-10">Loading users...</p>;
+  if (error)
     return (
       <p className="text-center mt-10 text-red-500">Error loading users!</p>
     );
-  }
 
   return (
     <div>
@@ -176,17 +182,13 @@ export default function UserManagement() {
                           ? "Deleting..."
                           : "🗑️"}
                       </button>
+                      <button
+                        onClick={() => handleSuspendUser(user._id)}
+                        className="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 p-2 rounded-md"
+                      >
+                        {user.isSuspended ? "✅ Unsuspend" : "🚫 Suspend"}
+                      </button>
                     </>
-                  )}
-                  {deletionStatus[user._id] === "success" && (
-                    <div className="text-green-500">
-                      User successfully deleted!
-                    </div>
-                  )}
-                  {deletionStatus[user._id]?.startsWith("error") && (
-                    <div className="text-red-500">
-                      Error: {deletionStatus[user._id]}
-                    </div>
                   )}
                 </td>
               </tr>
@@ -195,6 +197,7 @@ export default function UserManagement() {
         </table>
       </div>
 
+      {/* Pagination */}
       <div className="flex justify-center mt-3 space-x-2">
         <button
           className={`px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-md ${

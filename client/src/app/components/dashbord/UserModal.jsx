@@ -81,7 +81,7 @@ export default function UserModal() {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 animate__animated animate__backInLeft animate__duration-4000 animate__delay-2s">
       <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-md">
         <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
 
