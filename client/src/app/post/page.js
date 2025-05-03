@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../contexts/authContext/AuthContext";
@@ -186,186 +186,175 @@ const Page = () => {
     return <p className="text-red-500 text-center">Post not found</p>;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 text-white">
-      {/* Image */}
-      {post.imageUrl ? (
-        <Image
-          src={post.imageUrl}
-          alt={post.title}
-          width={800}
-          height={400}
-          priority
-          className="w-full h-60 object-cover rounded-md mb-4"
-        />
-      ) : (
-        <div className="w-full h-60 bg-gray-800 rounded-md mb-4 flex items-center justify-center text-gray-400">
-          No Image Provided
-        </div>
-      )}
-
-      {/* Title */}
-      <h1 className="text-3xl font-bold mb-2">{post.title}</h1>
-
-      {/* Author & Date */}
-      <div className="text-gray-400 mb-4 text-sm">
-        <span>{post.author?.name || "Unknown Author"}</span> |{" "}
-        <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-      </div>
-
-      {/* Content */}
-      <p className="text-gray-200 mb-6">{post.content}</p>
-
-      {/* Edit Button for Post */}
-      {user?.user?.name === post.author?.name && !editingPost && (
-        <button
-          onClick={() => dispatch(setEditingPost(true))}
-          className="bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-3 rounded mb-4"
-        >
-          ✏️ Edit Post
-        </button>
-      )}
-
-      {editingPost && (
-        <div className="mb-6">
-          <input
-            type="text"
-            value={editForm.title}
-            onChange={(e) =>
-              dispatch(setEditForm({ ...editForm, title: e.target.value }))
-            }
-            placeholder="Title"
-            className="w-full mb-2 p-2 bg-gray-800 border border-gray-600 rounded"
+    <Suspense fallback={<div>Loading...</div>}>
+      <div className="max-w-4xl mx-auto px-4 py-6 text-white">
+        {/* Image */}
+        {post.imageUrl ? (
+          <Image
+            src={post.imageUrl}
+            alt={post.title}
+            width={800}
+            height={400}
+            priority
+            className="w-full h-60 object-cover rounded-md mb-4"
           />
-          <textarea
-            value={editForm.content}
-            onChange={(e) =>
-              dispatch(setEditForm({ ...editForm, content: e.target.value }))
-            }
-            rows={4}
-            placeholder="Content"
-            className="w-full mb-2 p-2 bg-gray-800 border border-gray-600 rounded"
-          />
-          <input
-            type="file"
-            onChange={handleImageChange}
-            className="mb-2 text-sm"
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={handlePostUpdate}
-              className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded"
-            >
-              ✅ Confirm Update
-            </button>
-            <button
-              onClick={() => dispatch(setEditingPost(false))}
-              className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded"
-            >
-              ❌ Cancel
-            </button>
+        ) : (
+          <div className="w-full h-60 bg-gray-800 rounded-md mb-4 flex items-center justify-center text-gray-400">
+            No Image Provided
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Likes & Dislikes */}
-      <div className="flex gap-4 items-center mb-6">
-        <button
-          onClick={handleLike}
-          className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded"
-        >
-          👍 {likes}
-        </button>
-        <button
-          onClick={handleDislike}
-          className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded"
-        >
-          👎 {dislikes}
-        </button>
-      </div>
+        {/* Title */}
+        <h1 className="text-3xl font-bold mb-2">{post.title}</h1>
 
-      {/* Comments Section */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Comments</h2>
-        <form onSubmit={handleSubmit(onSubmit)} className="mb-6">
-          <textarea
-            {...register("comment", { required: "Comment is required" })}
-            placeholder="Write a comment..."
-            className="w-full p-2 bg-gray-800 border border-gray-600 rounded mb-2"
-          />
-          {errors.comment && (
-            <p className="text-red-500 text-sm">{errors.comment.message}</p>
-          )}
-          <button
-            type="submit"
-            className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
-          >
-            Post Comment
-          </button>
-        </form>
-
-        {/* Show all comments */}
-        <div>
-          {comments
-            ?.slice(0, showAllComments ? comments.length : 3)
-            .map((comment) => (
-              <div key={comment._id} className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-semibold">{comment.author?.name}</span>
-                  {user?.user?.name === comment.author?.name && (
-                    <button
-                      onClick={() => {
-                        dispatch(setEditCommentText(comment.content));
-                        dispatch(setEditingCommentId(comment._id));
-                      }}
-                      className="bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-3 rounded"
-                    >
-                      ✏️ Edit
-                    </button>
-                  )}
-                </div>
-                <p>{comment.content}</p>
-
-                {/* Edit comment */}
-                {editingCommentId === comment._id && (
-                  <div className="mt-4">
-                    <textarea
-                      value={editCommentText}
-                      onChange={(e) =>
-                        dispatch(setEditCommentText(e.target.value))
-                      }
-                      className="w-full p-2 bg-gray-800 border border-gray-600 rounded mb-2"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleCommentUpdate(comment._id)}
-                        className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded"
-                      >
-                        ✅ Confirm Update
-                      </button>
-                      <button
-                        onClick={() => dispatch(setEditingCommentId(null))}
-                        className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded"
-                      >
-                        ❌ Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
+        {/* Author & Date */}
+        <div className="text-gray-400 mb-4 text-sm">
+          <span>{post.author?.name || "Unknown Author"}</span> |{" "}
+          <span>{new Date(post.createdAt).toLocaleDateString()}</span>
         </div>
 
-        {/* Show more comments */}
-        {comments.length > 3 && !showAllComments && (
+        {/* Content */}
+        <p className="text-gray-200 mb-6">{post.content}</p>
+
+        {/* Edit Button for Post */}
+        {user?.user?.name === post.author?.name && !editingPost && (
           <button
-            onClick={() => setShowAllComments(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded mt-4"
+            onClick={() => dispatch(setEditingPost(true))}
+            className="bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-3 rounded mb-4"
           >
-            Show All Comments
+            ✏️ Edit Post
           </button>
         )}
+
+        {editingPost && (
+          <div className="mb-6">
+            <input
+              type="text"
+              value={editForm.title}
+              onChange={(e) =>
+                dispatch(setEditForm({ ...editForm, title: e.target.value }))
+              }
+              placeholder="Title"
+              className="w-full mb-2 p-2 bg-gray-800 border border-gray-600 rounded"
+            />
+            <textarea
+              value={editForm.content}
+              onChange={(e) =>
+                dispatch(setEditForm({ ...editForm, content: e.target.value }))
+              }
+              rows={4}
+              placeholder="Content"
+              className="w-full mb-2 p-2 bg-gray-800 border border-gray-600 rounded"
+            />
+            <input
+              type="file"
+              onChange={handleImageChange}
+              className="mb-2 text-sm"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handlePostUpdate}
+                className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded"
+              >
+                ✅ Confirm Update
+              </button>
+              <button
+                onClick={() => dispatch(setEditingPost(false))}
+                className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded"
+              >
+                ❌ Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Likes & Dislikes */}
+        <div className="flex gap-4 items-center mb-6">
+          <button
+            onClick={handleLike}
+            className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded"
+          >
+            👍 {likes}
+          </button>
+          <button
+            onClick={handleDislike}
+            className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded"
+          >
+            👎 {dislikes}
+          </button>
+        </div>
+
+        {/* Comments Section */}
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Comments</h2>
+          <form onSubmit={handleSubmit(onSubmit)} className="mb-6">
+            <textarea
+              {...register("comment")}
+              placeholder="Add a comment"
+              className="w-full mb-2 p-2 bg-gray-800 border border-gray-600 rounded"
+            />
+            {errors.comment && (
+              <span className="text-red-500 text-sm">{errors.comment.message}</span>
+            )}
+            <button
+              type="submit"
+              className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded"
+            >
+              Submit Comment
+            </button>
+          </form>
+
+          {comments.length > 0 && (
+            <div>
+              {comments.map((comment) => (
+                <div
+                  key={comment._id}
+                  className="border-b border-gray-600 py-3"
+                >
+                  <p>{comment.content}</p>
+                  <div className="flex gap-2 mt-2">
+                    {user?.user?.name === comment.author?.name && (
+                      <button
+                        onClick={() => dispatch(setEditingCommentId(comment._id))}
+                        className="bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-3 rounded"
+                      >
+                        ✏️ Edit Comment
+                      </button>
+                    )}
+
+                    {editingCommentId === comment._id && (
+                      <div className="flex gap-2 mt-2">
+                        <textarea
+                          value={editCommentText}
+                          onChange={(e) =>
+                            dispatch(setEditCommentText(e.target.value))
+                          }
+                          className="p-2 bg-gray-800 text-white rounded"
+                        />
+                        <button
+                          onClick={() => handleCommentUpdate(comment._id)}
+                          className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded"
+                        >
+                          ✅ Save
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {!showAllComments && comments.length > 3 && (
+                <button
+                  onClick={() => setShowAllComments(true)}
+                  className="text-blue-500 hover:text-blue-600"
+                >
+                  Show All Comments
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </Suspense>
   );
 };
 
