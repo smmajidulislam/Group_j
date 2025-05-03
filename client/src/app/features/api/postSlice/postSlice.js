@@ -6,7 +6,7 @@ export const postApi = createApi({
   reducerPath: "postApi",
 
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
+    baseUrl: `${process.env.NEXT_PUBLIC_BASE_URL}`,
     prepareHeaders: (headers) => {
       const userCookie = Cookies.get("user");
       if (userCookie) {

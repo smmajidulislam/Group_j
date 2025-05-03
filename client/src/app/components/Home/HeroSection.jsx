@@ -28,7 +28,7 @@ export default function HeroSection() {
     );
   }
 
-  const post = data?.posts.find((post) => post.author.isAdmin);
+  const post = data?.posts.find((post) => post?.author?.isAdmin);
   if (!post) {
     return (
       <section className="px-4 text-gray-200 py-12 md:py-20 max-w-7xl mx-auto">
@@ -64,6 +64,7 @@ export default function HeroSection() {
               alt={post.title}
               width={400}
               height={300}
+              priority
               className="w-full h-40 object-cover rounded-md mb-3"
             />
           ) : (

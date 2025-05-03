@@ -3,12 +3,13 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../contexts/authContext/AuthContext";
 import { useSearchPostsQuery } from "../features/api/searchSlice/searchSlice";
+import { useRouter } from "next/navigation"; // for redirection
 
 const Nav = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const { user, isLoading, logout } = useAuth();
-
+  const router = useRouter();
   // RTK Query call with skip if search term is empty
   const {
     data: posts,
@@ -19,14 +20,19 @@ const Nav = () => {
   });
 
   const filteredSuggestions =
-    posts?.map((post) => post.title).slice(0, 5) || [];
+    posts
+      ?.map((post) => ({
+        title: post.title,
+        _id: post._id,
+      }))
+      .slice(0, 5) || [];
 
   // Close suggestion box when clicked outside
   const searchRef = useRef();
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setSearchTerm(""); // Clear search when clicked outside
+        setSearchTerm("");
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -34,6 +40,13 @@ const Nav = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const handleSearch = () => {
+    if (searchTerm.trim() !== "") {
+      router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+      setSearchTerm("");
+    }
+  };
 
   const renderSkeleton = () => (
     <div className="hidden md:flex space-x-4 animate-pulse">
@@ -47,10 +60,8 @@ const Nav = () => {
     <nav className="bg-gray-800 text-white sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
           <div className="flex-shrink-0">LOGO</div>
 
-          {/* Desktop Menu */}
           {isLoading ? (
             renderSkeleton()
           ) : (
@@ -122,11 +133,14 @@ const Nav = () => {
               <input
                 type="text"
                 placeholder="Search"
-                onChange={(e) => setSearchTerm(e.target.value)} // no debounce
+                onChange={(e) => setSearchTerm(e.target.value)}
                 value={searchTerm}
                 className="bg-gray-900 text-sm px-4 py-2 rounded-l focus:outline-none focus:ring"
               />
-              <button className="bg-teal-500 px-4 py-2 rounded-r hover:bg-teal-600">
+              <button
+                className="bg-teal-500 px-4 py-2 rounded-r hover:bg-teal-600"
+                onClick={handleSearch}
+              >
                 Search
               </button>
             </div>
@@ -145,13 +159,19 @@ const Nav = () => {
                     No suggestions
                   </div>
                 ) : (
-                  filteredSuggestions.map((item, index) => (
+                  filteredSuggestions?.map((item, index) => (
                     <div
                       key={index}
                       className="px-4 py-2 text-sm hover:bg-gray-300 cursor-pointer transition-all duration-150 border-b"
-                      onClick={() => setSearchTerm(item)}
+                      onClick={() => {
+                        setSearchTerm(item?.title);
+                        router.push(`/post/?id=${item?._id}`);
+                        setSearchTerm("");
+                      }}
                     >
-                      {item.length > 30 ? item.slice(0, 30) + "..." : item}
+                      {item.length > 30
+                        ? item?.title.slice(0, 30) + "..."
+                        : item?.title}
                     </div>
                   ))
                 )}

@@ -3,7 +3,9 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const searchSlice = createApi({
   reducerPath: "searchSlice",
-  baseQuery: fetchBaseQuery({ baseUrl: `${process.env.NEXT_PUBLIC_BASE_URL}` }),
+  baseQuery: fetchBaseQuery({
+    baseUrl: `${process.env.NEXT_PUBLIC_BASE_URL}`,
+  }),
   endpoints: (builder) => ({
     searchPosts: builder.query({
       query: (searchTerm) => ({

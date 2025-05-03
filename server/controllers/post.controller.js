@@ -473,7 +473,7 @@ exports.searchPosts = async (req, res) => {
     });
 
     // Filter out posts from suspended users
-    const visiblePosts = posts.filter((post) => !post.author.isSuspended);
+    const visiblePosts = posts.filter((post) => !post?.author?.isSuspended);
 
     res.status(200).json(visiblePosts);
   } catch (error) {
