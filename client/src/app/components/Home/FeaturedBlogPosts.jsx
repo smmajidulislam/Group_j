@@ -163,7 +163,7 @@ export default function FeaturedBlogPosts() {
             </div>
 
             <Link
-              href={{ pathname: "/post", query: { id: post._id } }}
+              href={{ pathname: `/post/${post._id}` }}
               className="text-blue-500 font-medium hover:underline text-sm flex items-center gap-1"
             >
               Read more <span>&rarr;</span>
