@@ -51,13 +51,10 @@ export default function HeroSection() {
         Unlock the Secrets of Ddsgnr <br className="hidden md:block" />
         with Our Expert Analysis
       </h2>
-      <p className="text-gray-500 mb-10">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-      </p>
 
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
+      <div className="flex flex-col lg:flex-row gap-8 items-center justify-center">
         {/* Image */}
-        <div className="flex-shrink-0 w-full lg:w-1/2">
+        <div className="flex-shrink-0 w-full lg:w-1/2 flex justify-center items-center">
           {post?.imageUrl ? (
             <Image
               src={post.imageUrl}
@@ -65,7 +62,7 @@ export default function HeroSection() {
               width={400}
               height={300}
               priority
-              className="w-full h-40 object-cover rounded-md mb-3"
+              className="w-full h-40 object-cover object-center rounded-md mb-3"
             />
           ) : (
             <div className="w-full h-40 bg-gray-800 rounded-md mb-3 flex items-center justify-center text-gray-500 text-sm">
@@ -90,7 +87,7 @@ export default function HeroSection() {
                 className="w-8 h-8 rounded-full"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full">No profile image</div>
+              <div className="w-8 h-8 rounded-full bg-gray-700" />
             )}
 
             <div className="text-sm text-gray-500">
