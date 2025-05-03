@@ -29,9 +29,8 @@ import {
   updatePostInState,
 } from "../features/slice/publicPostSlice/publicPostSlice";
 
-const Page = () => {
-  const searchParams = useSearchParams();
-  const postID = searchParams.get("id");
+const Singelpost = ({ id }) => {
+  const postID = id;
 
   const dispatch = useDispatch();
   const {
@@ -369,4 +368,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default Singelpost;

@@ -95,7 +95,7 @@ export default function DashboardPage() {
                       {/* Responsive Button Container */}
                       <div className="flex flex-wrap gap-2 mt-4">
                         <Link
-                          href={{ pathname: "/post", query: { id: post._id } }}
+                          href={{ pathname: `/post/${post._id}` }}
                           className="text-blue-600 hover:text-blue-800 text-sm font-medium px-4 py-2 rounded-md border border-blue-600 hover:bg-blue-100 transition-all"
                         >
                           Edit
