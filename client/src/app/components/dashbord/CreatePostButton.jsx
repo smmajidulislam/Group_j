@@ -90,81 +90,88 @@ export default function CreatePostButton() {
     <div className="text-right">
       <button
         onClick={() => dispatch(setOpenPostModal(true))}
-        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
       >
         ➕ Create New Post
       </button>
 
       {openPostModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 overflow-hidden">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-md max-h-[90vh] overflow-y-auto">
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="space-y-4"
-              style={{ maxHeight: "calc(90vh - 2rem)" }}
-            >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 overflow-y-auto">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg w-[95%] sm:w-3/4 md:w-2/3 lg:w-1/2 xl:w-1/3 max-h-[90vh] overflow-y-auto">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              {/* Title */}
               <div>
-                <label className="block mb-1 font-bold text-left">Title</label>
+                <label className="block mb-1 font-semibold text-gray-700">
+                  Title
+                </label>
                 <input
                   type="text"
                   {...register("title", { required: true })}
-                  className="w-full border rounded p-2 mt-1"
+                  className="w-full border rounded p-2 outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 {errors.title && (
                   <p className="text-red-500 text-sm">Title is required.</p>
                 )}
               </div>
 
+              {/* Content */}
               <div>
-                <label className="block mb-1 font-bold text-left">
+                <label className="block mb-1 font-semibold text-gray-700">
                   Content
                 </label>
                 <textarea
                   {...register("content", { required: true })}
-                  rows="6"
-                  className="w-full border p-2 rounded"
+                  rows="4"
+                  className="w-full border rounded p-2 resize-none outline-none focus:ring-2 focus:ring-blue-500"
                 ></textarea>
                 {errors.content && (
-                  <p className="text-sm text-red-500 mt-1">
-                    Content is required.
-                  </p>
+                  <p className="text-red-500 text-sm">Content is required.</p>
                 )}
               </div>
 
+              {/* Image Input */}
               <div>
-                <label className="block mb-1 font-bold text-left">Image</label>
+                <label className="block mb-1 font-semibold text-gray-700">
+                  Image
+                </label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="w-full border p-2 rounded"
+                  className="w-full border rounded p-2"
                 />
               </div>
 
-              {previewImage && (
-                <div className="flex justify-center mb-4">
-                  <div className="relative w-24 h-24">
+              {/* Image Preview or Skeleton */}
+              <div className="flex justify-center my-3">
+                {previewImage ? (
+                  <div className="relative w-24 h-24 rounded-full overflow-hidden border shadow">
                     <Image
                       src={previewImage}
                       alt="Preview"
                       fill
-                      className="rounded-full object-cover"
+                      className="object-cover"
                     />
                   </div>
-                </div>
-              )}
+                ) : isLoading ? (
+                  <div className="w-24 h-24 rounded-full bg-gray-300 animate-pulse"></div>
+                ) : null}
+              </div>
 
+              {/* Status messages */}
               {isLoading && (
-                <p className="text-blue-600 text-sm mt-1">Uploading image...</p>
+                <p className="text-blue-600 text-sm text-center">
+                  Uploading image...
+                </p>
               )}
-
               {isErrorImage && (
-                <p className="text-red-600 text-sm mt-1">
+                <p className="text-red-600 text-sm text-center">
                   Failed to upload image: {errorImage || "Unknown error"}
                 </p>
               )}
 
-              <div className="flex justify-end gap-4 mt-6">
+              {/* Buttons */}
+              <div className="flex justify-end gap-4 pt-2">
                 <button
                   type="button"
                   onClick={() => dispatch(resetPostData())}
