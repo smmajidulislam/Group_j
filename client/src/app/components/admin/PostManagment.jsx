@@ -86,7 +86,61 @@ export default function PostManagement() {
   const isPrevDisabled = currentPage === 1;
   const isNextDisabled = currentPage === data?.pages;
 
-  if (isLoading || deleteLoading) return <div>Loading...</div>;
+  const renderPostSkeleton = () => {
+    return (
+      <div className="w-full max-w-6xl overflow-x-auto animate-pulse">
+        <table className="min-w-full text-left bg-white text-gray-900 rounded-lg shadow-lg">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="py-3 px-4">Title</th>
+              <th className="py-3 px-4">Content</th>
+              <th className="py-3 px-4">Author</th>
+              <th className="py-3 px-4 text-center">Date</th>
+              <th className="py-3 px-4 text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...Array(5)].map((_, i) => (
+              <tr key={i} className="border-t">
+                <td className="py-3 px-4">
+                  <div className="h-4 w-24 bg-gray-300 rounded"></div>
+                </td>
+                <td className="py-3 px-4">
+                  <div className="h-4 w-48 bg-gray-300 rounded"></div>
+                </td>
+                <td className="py-3 px-4">
+                  <div className="h-4 w-20 bg-gray-300 rounded"></div>
+                </td>
+                <td className="py-3 px-4 text-center">
+                  <div className="h-4 w-28 bg-gray-300 mx-auto rounded"></div>
+                </td>
+                <td className="py-3 px-4 text-center">
+                  <div className="flex justify-center gap-2">
+                    <div className="h-8 w-12 bg-gray-300 rounded-md"></div>
+                    <div className="h-8 w-12 bg-gray-300 rounded-md"></div>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  if (isLoading || deleteLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6 md:p-8 flex flex-col items-center">
+        <div className="flex flex-col md:flex-row justify-between items-center w-full max-w-6xl mb-6 space-y-4 md:space-y-0">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+            All posts
+          </h2>
+        </div>
+        {renderPostSkeleton()}
+      </div>
+    );
+  }
+
   if (error) return <div>Error: {error.message}</div>;
 
   return (
@@ -138,7 +192,7 @@ export default function PostManagement() {
                 <td className="py-3 px-4 text-center">
                   {post.createdAt && new Date(post.createdAt).toLocaleString()}
                 </td>
-                <td className="py-3 px-4 text-center flex justify-center gap-2">
+                <td className="py-3 px-4 text-center flex justify-center gap-2 flex-wrap">
                   {editingPost === post._id ? (
                     <>
                       <button
@@ -175,7 +229,7 @@ export default function PostManagement() {
         </table>
       </div>
 
-      <div className="flex justify-center mt-3 space-x-2">
+      <div className="flex justify-center mt-4 flex-wrap gap-2">
         <button
           className={`px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-md ${
             isPrevDisabled ? "cursor-not-allowed opacity-50" : ""

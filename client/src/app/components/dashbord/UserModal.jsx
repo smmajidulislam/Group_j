@@ -85,6 +85,7 @@ export default function UserModal() {
       <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-md">
         <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
 
+        {/* Error & Success Messages */}
         {isError && (
           <p className="text-red-500 text-sm mb-2">
             {error?.data?.message || "Something went wrong!"}
@@ -97,65 +98,74 @@ export default function UserModal() {
         )}
         {isSuccessImage && (
           <p className="text-green-500 text-sm mb-2">
-            Image uploaded successfully!
+            ✅ Image uploaded successfully!
           </p>
         )}
         {isLoadingImage && (
-          <p className="text-blue-500 text-sm mb-2">Uploading image...</p>
+          <p className="text-blue-500 text-sm mb-2">⏳ Uploading image...</p>
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Name */}
           <div>
-            <label className="block text-sm font-medium">Name</label>
+            <label className="block text-sm font-medium mb-1">Name</label>
             <input
               type="text"
               {...register("name")}
-              className="w-full border rounded p-2 mt-1"
+              placeholder="Enter your name"
+              className="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
 
+          {/* Profile Image Upload */}
           <div>
-            <label className="block text-sm font-medium">
+            <label className="block text-sm font-medium mb-1">
               Change Profile Image
             </label>
             <input
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="w-full border rounded p-2 mt-1"
+              className="w-full border rounded-lg p-2"
             />
           </div>
 
+          {/* Preview */}
           {previewImage && (
-            <div className="flex justify-center mb-4">
-              <div className="relative w-24 h-24">
-                <Image
-                  src={previewImage}
-                  alt="Preview"
-                  fill
-                  className="rounded-full object-cover"
-                />
+            <div className="flex justify-center">
+              <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden">
+                {isLoadingImage ? (
+                  <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
+                ) : (
+                  <Image
+                    src={previewImage}
+                    alt="Preview"
+                    fill
+                    className="object-cover"
+                  />
+                )}
               </div>
             </div>
           )}
 
-          <div className="flex justify-end gap-4 mt-6">
+          {/* Buttons */}
+          <div className="flex justify-end gap-4 pt-4">
             <button
               type="button"
               onClick={() => dispatch(setModalOpen(false))}
-              className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition"
+              className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition text-sm sm:text-base"
               disabled={isLoading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className={`px-4 py-2 rounded text-white transition ${
+              disabled={isLoading}
+              className={`px-4 py-2 rounded-lg text-white text-sm sm:text-base transition ${
                 isLoading
                   ? "bg-blue-300 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700"
               }`}
-              disabled={isLoading}
             >
               {isLoading ? "Saving..." : "Save"}
             </button>

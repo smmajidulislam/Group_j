@@ -284,87 +284,12 @@ const Page = () => {
       </div>
 
       {/* Comments Section */}
-      <div className="mb-8">
-        <h2 className="text-2xl mb-4">Comments ({comments.length})</h2>
-
-        {comments
-          .slice(0, showAllComments ? comments.length : 3)
-          .map((comment) => (
-            <div
-              key={comment._id}
-              className="border-b border-gray-600 pb-4 mb-4"
-            >
-              <p className="text-gray-200">{comment.content}</p>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-400">
-                  {comment.author?.name} |{" "}
-                  {new Date(comment.createdAt).toLocaleDateString()}
-                </span>
-                {/* Edit/Delete Buttons */}
-                {user?.user?.name === comment.author?.name && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        dispatch(setEditingCommentId(comment._id));
-                        dispatch(setEditCommentText(comment.content));
-                      }}
-                      className="text-yellow-600"
-                    >
-                      ✏️ Edit
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Edit Comment */}
-              {editingCommentId === comment._id && (
-                <div className="mt-4">
-                  <textarea
-                    value={editCommentText}
-                    onChange={(e) =>
-                      dispatch(setEditCommentText(e.target.value))
-                    }
-                    rows={3}
-                    className="w-full p-2 bg-gray-800 border border-gray-600 rounded"
-                  />
-                  <button
-                    onClick={() => handleCommentUpdate(comment._id)}
-                    className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded mt-2"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => dispatch(setEditingCommentId(null))}
-                    className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded mt-2 ml-2"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-
-        {/* Show All Comments Button */}
-        {!showAllComments && comments.length > 3 && (
-          <button
-            onClick={() => setShowAllComments(true)}
-            className="text-blue-600"
-          >
-            Show all comments
-          </button>
-        )}
-      </div>
-
-      {/* Add Comment */}
-      {user?.token && (
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="border-t border-gray-600 pt-4"
-        >
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Comments</h2>
+        <form onSubmit={handleSubmit(onSubmit)} className="mb-6">
           <textarea
             {...register("comment", { required: "Comment is required" })}
-            rows={3}
-            placeholder="Add your comment"
+            placeholder="Write a comment..."
             className="w-full p-2 bg-gray-800 border border-gray-600 rounded mb-2"
           />
           {errors.comment && (
@@ -372,12 +297,74 @@ const Page = () => {
           )}
           <button
             type="submit"
-            className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded"
+            className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
           >
-            Submit Comment
+            Post Comment
           </button>
         </form>
-      )}
+
+        {/* Show all comments */}
+        <div>
+          {comments
+            ?.slice(0, showAllComments ? comments.length : 3)
+            .map((comment) => (
+              <div key={comment._id} className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-semibold">{comment.author?.name}</span>
+                  {user?.user?.name === comment.author?.name && (
+                    <button
+                      onClick={() => {
+                        dispatch(setEditCommentText(comment.content));
+                        dispatch(setEditingCommentId(comment._id));
+                      }}
+                      className="bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-3 rounded"
+                    >
+                      ✏️ Edit
+                    </button>
+                  )}
+                </div>
+                <p>{comment.content}</p>
+
+                {/* Edit comment */}
+                {editingCommentId === comment._id && (
+                  <div className="mt-4">
+                    <textarea
+                      value={editCommentText}
+                      onChange={(e) =>
+                        dispatch(setEditCommentText(e.target.value))
+                      }
+                      className="w-full p-2 bg-gray-800 border border-gray-600 rounded mb-2"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleCommentUpdate(comment._id)}
+                        className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded"
+                      >
+                        ✅ Confirm Update
+                      </button>
+                      <button
+                        onClick={() => dispatch(setEditingCommentId(null))}
+                        className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded"
+                      >
+                        ❌ Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+        </div>
+
+        {/* Show more comments */}
+        {comments.length > 3 && !showAllComments && (
+          <button
+            onClick={() => setShowAllComments(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded mt-4"
+          >
+            Show All Comments
+          </button>
+        )}
+      </div>
     </div>
   );
 };

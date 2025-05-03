@@ -24,26 +24,27 @@ export default function FeaturedBlogPosts() {
       .padStart(2, "0")}-${d.getFullYear()}`;
   };
 
-  const userCookie = Cookies.get("user");
-  const userData = userCookie ? JSON.parse(userCookie) : null;
-
   const isPrevDisabled = currentPage === 1;
   const isNextDisabled = currentPage === data?.pages;
 
   const handlePageChange = (page) => setCurrentPage(page);
 
+  const userCookie = Cookies.get("user");
+  const userData = userCookie ? JSON.parse(userCookie) : null;
+
   const handleLike = async (postId) => {
     if (!userData) return alert("Please log in to like the post.");
-
-    const likedPosts = userData.likedPosts || [];
-    const dislikedPosts = userData.dislikedPosts || [];
+    const likedPosts = Array.isArray(userData.likedPosts)
+      ? userData.likedPosts
+      : [];
+    const dislikedPosts = Array.isArray(userData.dislikedPosts)
+      ? userData.dislikedPosts
+      : [];
 
     if (likedPosts.includes(postId))
       return alert("You already liked this post.");
-
-    if (dislikedPosts.includes(postId)) {
+    if (dislikedPosts.includes(postId))
       dislikedPosts.splice(dislikedPosts.indexOf(postId), 1);
-    }
 
     await likePost(postId);
     Cookies.set(
@@ -58,16 +59,17 @@ export default function FeaturedBlogPosts() {
 
   const handleDislike = async (postId) => {
     if (!userData) return alert("Please log in to dislike the post.");
-
-    const likedPosts = userData.likedPosts || [];
-    const dislikedPosts = userData.dislikedPosts || [];
+    const likedPosts = Array.isArray(userData.likedPosts)
+      ? userData.likedPosts
+      : [];
+    const dislikedPosts = Array.isArray(userData.dislikedPosts)
+      ? userData.dislikedPosts
+      : [];
 
     if (dislikedPosts.includes(postId))
       return alert("You already disliked this post.");
-
-    if (likedPosts.includes(postId)) {
+    if (likedPosts.includes(postId))
       likedPosts.splice(likedPosts.indexOf(postId), 1);
-    }
 
     await dislikePost(postId);
     Cookies.set(
@@ -82,23 +84,17 @@ export default function FeaturedBlogPosts() {
 
   if (isLoading) {
     return (
-      <section className="px-4 py-12 max-w-7xl mx-auto">
-        <h2 className="text-xl text-gray-300 font-semibold mb-8">Blog posts</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[...Array(6)].map((_, i) => (
+      <section className="max-w-7xl mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="flex flex-col border border-gray-700 rounded-lg p-4 bg-gray-900 animate-pulse"
+              className="animate-pulse bg-gray-800 rounded-md p-4 space-y-4"
             >
-              <div className="w-full h-40 bg-gray-700 rounded-md mb-3" />
-              <div className="h-4 bg-gray-700 w-1/2 mb-2 rounded" />
-              <div className="h-4 bg-gray-700 w-3/4 mb-2 rounded" />
-              <div className="h-4 bg-gray-700 w-full mb-2 rounded" />
-              <div className="h-4 bg-gray-700 w-2/3 mb-4 rounded" />
-              <div className="flex gap-3">
-                <div className="h-8 w-20 bg-gray-700 rounded-md" />
-                <div className="h-8 w-20 bg-gray-700 rounded-md" />
-              </div>
+              <div className="w-full h-40 bg-gray-700 rounded"></div>
+              <div className="h-4 bg-gray-700 rounded w-1/2"></div>
+              <div className="h-4 bg-gray-700 rounded w-full"></div>
+              <div className="h-4 bg-gray-700 rounded w-3/4"></div>
             </div>
           ))}
         </div>
@@ -137,7 +133,7 @@ export default function FeaturedBlogPosts() {
               </div>
             )}
 
-            <div className="flex items-center text-sm text-gray-400 space-x-4 mb-2 ">
+            <div className="flex items-center text-sm text-gray-400 space-x-4 mb-2">
               <span className="font-medium">{post.author.name}</span>
               <span>{formatDate(post.createdAt)}</span>
             </div>
@@ -150,14 +146,15 @@ export default function FeaturedBlogPosts() {
 
             <div className="flex items-center text-sm text-gray-400 gap-6 mb-4">
               <button
-                className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full shadow-sm flex items-center gap-1"
+                className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full shadow-sm transition duration-200 flex items-center gap-1"
                 onClick={() => handleLike(post._id)}
               >
                 <ThumbsUp className="w-4 h-4" />
                 <span>{post.likes || 0}</span>
               </button>
+
               <button
-                className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full shadow-sm flex items-center gap-1"
+                className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full shadow-sm transition duration-200 flex items-center gap-1"
                 onClick={() => handleDislike(post._id)}
               >
                 <ThumbsDown className="w-4 h-4" />
@@ -175,8 +172,7 @@ export default function FeaturedBlogPosts() {
         ))}
       </div>
 
-      {/* Pagination */}
-      <div className="flex justify-center mt-3 space-x-2">
+      <div className="flex justify-center mt-8 space-x-2">
         <button
           className={`px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-md ${
             isPrevDisabled ? "cursor-not-allowed opacity-50" : ""
