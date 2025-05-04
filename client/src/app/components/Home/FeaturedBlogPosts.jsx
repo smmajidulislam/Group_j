@@ -24,11 +24,6 @@ export default function FeaturedBlogPosts() {
       .padStart(2, "0")}-${d.getFullYear()}`;
   };
 
-  const isPrevDisabled = currentPage === 1;
-  const isNextDisabled = currentPage === data?.pages;
-
-  const handlePageChange = (page) => setCurrentPage(page);
-
   const userCookie = Cookies.get("user");
   const userData = userCookie ? JSON.parse(userCookie) : null;
 
@@ -85,14 +80,14 @@ export default function FeaturedBlogPosts() {
   if (isLoading) {
     return (
       <section className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="animate-pulse bg-gray-800 rounded-md p-4 space-y-4"
+              className="bg-gray-800 rounded-xl p-4 space-y-4 animate-pulse"
             >
-              <div className="w-full h-40 bg-gray-700 rounded"></div>
-              <div className="h-4 bg-gray-700 rounded w-1/2"></div>
+              <div className="w-full h-40 bg-gray-700 rounded-lg"></div>
+              <div className="h-4 bg-gray-700 rounded w-2/3"></div>
               <div className="h-4 bg-gray-700 rounded w-full"></div>
               <div className="h-4 bg-gray-700 rounded w-3/4"></div>
             </div>
@@ -104,36 +99,38 @@ export default function FeaturedBlogPosts() {
 
   if (isError) {
     return (
-      <p className="text-red-500 text-center py-10">
-        {error?.message || "Unknown error"}
+      <p className="text-red-500 text-center py-10 text-sm sm:text-base">
+        {error?.message || "Something went wrong!"}
       </p>
     );
   }
 
   return (
     <section className="px-4 py-12 max-w-7xl mx-auto">
-      <h2 className="text-xl text-gray-300 font-semibold mb-8">Blog posts</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <h2 className="text-2xl font-bold text-gray-200 mb-8 text-center">
+        Featured Blog Posts
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {posts.map((post) => (
           <div
             key={post._id}
-            className="flex flex-col border border-gray-700 rounded-lg p-4 bg-gray-900 animate__animated animate__rotateIn animate__duration-4000 animate__delay-1s"
+            className="flex flex-col border border-gray-700 rounded-xl p-4 bg-gray-900 animate__animated animate__rotateIn animate__duration-4000 animate__delay-1s"
           >
             {post?.imageUrl ? (
               <Image
                 src={post.imageUrl}
                 alt={post.title}
                 width={400}
-                height={300}
-                className="w-full h-40 object-cover rounded-md mb-3"
+                height={250}
+                className="w-full h-48 object-cover rounded-lg mb-4"
               />
             ) : (
-              <div className="w-full h-40 bg-gray-800 rounded-md mb-3 flex items-center justify-center text-gray-500 text-sm">
-                No post image
+              <div className="w-full h-48 bg-gray-800 rounded-lg flex items-center justify-center text-gray-500">
+                No image
               </div>
             )}
 
-            <div className="flex items-center text-sm text-gray-400 space-x-4 mb-2">
+            <div className="text-sm text-gray-400 flex items-center justify-between mb-2">
               <span className="font-medium">{post.author.name}</span>
               <span>{formatDate(post.createdAt)}</span>
             </div>
@@ -142,43 +139,45 @@ export default function FeaturedBlogPosts() {
               {post.title}
             </h3>
 
-            <p className="text-gray-400 mb-4 line-clamp-3">{post.content}</p>
+            <p className="text-gray-400 text-sm mb-4 line-clamp-3">
+              {post.content}
+            </p>
 
-            <div className="flex items-center text-sm text-gray-400 gap-6 mb-4">
+            <div className="flex items-center gap-4 mb-4">
               <button
-                className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full shadow-sm transition duration-200 flex items-center gap-1"
                 onClick={() => handleLike(post._id)}
+                className="flex items-center gap-1 text-blue-600 bg-blue-100 hover:bg-blue-200 px-2 py-1 rounded-full text-sm"
               >
                 <ThumbsUp className="w-4 h-4" />
-                <span>{post.likes || 0}</span>
+                {post.likes || 0}
               </button>
-
               <button
-                className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full shadow-sm transition duration-200 flex items-center gap-1"
                 onClick={() => handleDislike(post._id)}
+                className="flex items-center gap-1 text-red-600 bg-red-100 hover:bg-red-200 px-2 py-1 rounded-full text-sm"
               >
                 <ThumbsDown className="w-4 h-4" />
-                <span>{post.dislikes || 0}</span>
+                {post.dislikes || 0}
               </button>
             </div>
 
             <Link
-              href={{ pathname: `/post/${post._id}` }}
-              className="text-blue-500 font-medium hover:underline text-sm flex items-center gap-1"
+              href={`/post/${post._id}`}
+              className="text-blue-400 hover:underline text-sm"
             >
-              Read more <span>&rarr;</span>
+              Read more →
             </Link>
           </div>
         ))}
       </div>
 
-      <div className="flex justify-center mt-8 space-x-2">
+      {/* Pagination */}
+      <div className="flex justify-center mt-10 gap-2 flex-wrap">
         <button
-          className={`px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-md ${
-            isPrevDisabled ? "cursor-not-allowed opacity-50" : ""
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          className={`px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 ${
+            currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
           }`}
-          onClick={() => !isPrevDisabled && handlePageChange(currentPage - 1)}
-          disabled={isPrevDisabled}
         >
           Prev
         </button>
@@ -188,10 +187,12 @@ export default function FeaturedBlogPosts() {
           return (
             <button
               key={page}
-              className={`px-3 py-1 rounded-md ${
-                page === currentPage ? "bg-blue-600" : "bg-blue-500"
-              } hover:bg-blue-700`}
-              onClick={() => handlePageChange(page)}
+              onClick={() => setCurrentPage(page)}
+              className={`px-4 py-2 rounded-lg ${
+                currentPage === page
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+              }`}
             >
               {page}
             </button>
@@ -199,11 +200,11 @@ export default function FeaturedBlogPosts() {
         })}
 
         <button
-          className={`px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-md ${
-            isNextDisabled ? "cursor-not-allowed opacity-50" : ""
+          disabled={currentPage === data?.pages}
+          onClick={() => setCurrentPage((prev) => prev + 1)}
+          className={`px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 ${
+            currentPage === data?.pages ? "opacity-50 cursor-not-allowed" : ""
           }`}
-          onClick={() => !isNextDisabled && handlePageChange(currentPage + 1)}
-          disabled={isNextDisabled}
         >
           Next
         </button>

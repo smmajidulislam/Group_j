@@ -44,22 +44,27 @@ export default function DashboardPage() {
             <CreatePostButton />
           </div>
 
-          {/* Handling Loading State */}
-          {isLoading && (
-            <div className="text-center text-gray-200">
-              <p>Loading posts...</p>
+          {/* Handling Loading State with Skeleton Loader */}
+          {isLoading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="p-5 bg-gray-200 rounded-xl shadow-sm animate-pulse"
+                >
+                  <div className="h-6 bg-gray-300 rounded w-3/4 mb-4"></div>
+                  <div className="h-4 bg-gray-300 rounded w-1/2 mb-4"></div>
+                  <div className="w-full h-40 bg-gray-300 rounded-md mb-4"></div>
+                  <div className="h-6 bg-gray-300 rounded w-1/4 mb-2"></div>
+                  <div className="h-6 bg-gray-300 rounded w-1/4"></div>
+                </div>
+              ))}
             </div>
-          )}
-
-          {/* Handling Error State */}
-          {isError && (
+          ) : isError ? (
             <div className="text-center text-red-600">
               <p>Error loading posts. Please try again later.</p>
             </div>
-          )}
-
-          {/* Rendering Posts */}
-          {data?.posts.length === 0 ? (
+          ) : data?.posts.length === 0 ? (
             <p className="text-gray-200">No posts available.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -71,8 +76,11 @@ export default function DashboardPage() {
                   : content;
 
                 return (
-                  <div key={post._id}>
-                    <div className="bg-white border border-gray-200 p-5 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer animate__animated animate__rotateIn animate__duration-4000 animate__delay-1s">
+                  <div
+                    key={post._id}
+                    className="animate__animated animate__fadeIn animate__duration-1500"
+                  >
+                    <div className="bg-white border border-gray-200 p-5 rounded-xl shadow-sm hover:shadow-md transition-all">
                       <h3 className="text-xl font-semibold mb-2 truncate">
                         {post.title}
                       </h3>
@@ -88,7 +96,7 @@ export default function DashboardPage() {
                         />
                       ) : (
                         <div className="w-full h-40 bg-gray-100 rounded-md mb-2 flex items-center justify-center text-gray-400 text-sm">
-                          please add image
+                          Please add an image
                         </div>
                       )}
 
@@ -127,7 +135,7 @@ export default function DashboardPage() {
       <div className="flex justify-center mt-3 space-x-2">
         <button
           className={`px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-md ${
-            isPrevDisabled ? "cursor-not-allowed" : ""
+            isPrevDisabled ? "cursor-not-allowed opacity-50" : ""
           }`}
           onClick={() => !isPrevDisabled && handlePageChange(currentPage - 1)}
           disabled={isPrevDisabled}
@@ -152,7 +160,7 @@ export default function DashboardPage() {
 
         <button
           className={`px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-md ${
-            isNextDisabled ? "cursor-not-allowed" : ""
+            isNextDisabled ? "cursor-not-allowed opacity-50" : ""
           }`}
           onClick={() => !isNextDisabled && handlePageChange(currentPage + 1)}
           disabled={isNextDisabled}
