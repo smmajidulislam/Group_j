@@ -97,7 +97,7 @@ const Nav = () => {
               >
                 About Us
               </Link>
-              {user?.user?.isAdmin === false && (
+              {user?.token && (
                 <Link
                   href="/dashbord"
                   className="hover:bg-gray-700 px-3 py-2 rounded"
