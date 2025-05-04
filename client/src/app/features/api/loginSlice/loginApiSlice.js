@@ -21,10 +21,9 @@ export const authApi = createApi({
       }),
     }),
     verifyEmail: builder.query({
-      query: (data) => ({
+      query: (token) => ({
         url: `/auth/verify-email?token=${token}`,
         method: "GET",
-        body: data,
       }),
     }),
     forgotPassword: builder.mutation({
