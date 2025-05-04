@@ -61,7 +61,7 @@ const LoginForm = () => {
                   message: "Invalid email address",
                 },
               })}
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600"
             />
             {errors.email && (
               <p className="text-sm text-red-500 mt-1">
@@ -78,7 +78,7 @@ const LoginForm = () => {
             <input
               type="password"
               {...register("password", { required: "Password is required" })}
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600"
             />
             {errors.password && (
               <p className="text-sm text-red-500 mt-1">
@@ -95,7 +95,13 @@ const LoginForm = () => {
             }`}
             disabled={isLoading}
           >
-            {isLoading ? "Logging in..." : "Login"}
+            {isLoading ? (
+              <div className="flex justify-center">
+                <div className="w-6 h-6 border-4 border-t-transparent border-blue-600 border-solid rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              "Login"
+            )}
           </button>
         </form>
 

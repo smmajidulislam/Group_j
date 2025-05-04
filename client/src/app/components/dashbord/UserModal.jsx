@@ -81,34 +81,40 @@ export default function UserModal() {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 animate__animated animate__backInLeft animate__duration-4000 animate__delay-2s">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-md">
-        <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 sm:px-6 animate__animated animate__backInLeft animate__duration-4000 ">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-5 sm:p-6 md:p-8">
+        <h2 className="text-center text-xl sm:text-2xl font-semibold text-gray-800 mb-4">
+          Edit Profile
+        </h2>
 
         {/* Error & Success Messages */}
         {isError && (
-          <p className="text-red-500 text-sm mb-2">
+          <p className="text-red-500 text-sm text-center mb-2">
             {error?.data?.message || "Something went wrong!"}
           </p>
         )}
         {isErrorImage && (
-          <p className="text-red-500 text-sm mb-2">
+          <p className="text-red-500 text-sm text-center mb-2">
             {errorImage?.data?.message || "Image upload failed!"}
           </p>
         )}
         {isSuccessImage && (
-          <p className="text-green-500 text-sm mb-2">
+          <p className="text-green-500 text-sm text-center mb-2">
             ✅ Image uploaded successfully!
           </p>
         )}
         {isLoadingImage && (
-          <p className="text-blue-500 text-sm mb-2">⏳ Uploading image...</p>
+          <p className="text-blue-500 text-sm text-center mb-2">
+            ⏳ Uploading image...
+          </p>
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium mb-1">Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Name
+            </label>
             <input
               type="text"
               {...register("name")}
@@ -119,14 +125,14 @@ export default function UserModal() {
 
           {/* Profile Image Upload */}
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Change Profile Image
             </label>
             <input
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="w-full border rounded-lg p-2"
+              className="w-full border rounded-lg p-2 file:mr-2 file:py-1 file:px-2 file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700"
             />
           </div>
 
@@ -153,7 +159,7 @@ export default function UserModal() {
             <button
               type="button"
               onClick={() => dispatch(setModalOpen(false))}
-              className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition text-sm sm:text-base"
+              className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition text-sm sm:text-base "
               disabled={isLoading}
             >
               Cancel

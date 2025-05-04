@@ -1,6 +1,5 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
@@ -180,7 +179,19 @@ const Singelpost = ({ id }) => {
     dispatch(setEditCommentText(""));
   };
 
-  if (postLoading) return <p className="text-white">Loading...</p>;
+  if (postLoading) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="bg-gray-700 h-60 w-full rounded-md"></div>
+        <div className="bg-gray-700 h-6 w-3/4 rounded-md"></div>
+        <div className="bg-gray-700 h-4 w-full rounded-md"></div>
+        <div className="space-y-3">
+          <div className="bg-gray-700 h-6 w-full rounded-md"></div>
+          <div className="bg-gray-700 h-6 w-full rounded-md"></div>
+        </div>
+      </div>
+    );
+  }
   if (postError || !post)
     return <p className="text-red-500 text-center">Post not found</p>;
 
@@ -293,7 +304,9 @@ const Singelpost = ({ id }) => {
               className="w-full mb-2 p-2 bg-gray-800 border border-gray-600 rounded"
             />
             {errors.comment && (
-              <span className="text-red-500 text-sm">{errors.comment.message}</span>
+              <span className="text-red-500 text-sm">
+                {errors.comment.message}
+              </span>
             )}
             <button
               type="submit"
@@ -314,7 +327,9 @@ const Singelpost = ({ id }) => {
                   <div className="flex gap-2 mt-2">
                     {user?.user?.name === comment.author?.name && (
                       <button
-                        onClick={() => dispatch(setEditingCommentId(comment._id))}
+                        onClick={() =>
+                          dispatch(setEditingCommentId(comment._id))
+                        }
                         className="bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-3 rounded"
                       >
                         ✏️ Edit Comment
@@ -328,27 +343,25 @@ const Singelpost = ({ id }) => {
                           onChange={(e) =>
                             dispatch(setEditCommentText(e.target.value))
                           }
-                          className="p-2 bg-gray-800 text-white rounded"
+                          className="p-2 bg-gray-800 text-white border border-gray-600 rounded"
                         />
                         <button
                           onClick={() => handleCommentUpdate(comment._id)}
                           className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded"
                         >
-                          ✅ Save
+                          Confirm Update
                         </button>
                       </div>
                     )}
                   </div>
                 </div>
               ))}
-              {!showAllComments && comments.length > 3 && (
-                <button
-                  onClick={() => setShowAllComments(true)}
-                  className="text-blue-500 hover:text-blue-600"
-                >
-                  Show All Comments
-                </button>
-              )}
+              <button
+                onClick={() => setShowAllComments(!showAllComments)}
+                className="text-blue-600 hover:underline mt-4"
+              >
+                {showAllComments ? "Show Less" : "Show All Comments"}
+              </button>
             </div>
           )}
         </div>
