@@ -2,7 +2,7 @@
 
 import Singelpost from "@/app/components/Singelpost";
 
-const Page = async({ params }) => {
+const Page = async ({ params }) => {
   const id = await params?.id;
 
   return (

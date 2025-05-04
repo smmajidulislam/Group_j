@@ -3,13 +3,12 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../contexts/authContext/AuthContext";
 import { useSearchPostsQuery } from "../features/api/searchSlice/searchSlice";
-import { useRouter } from "next/navigation"; // for redirection
+import { useRouter } from "next/navigation";
 
 const Nav = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const { user, isLoading, logout } = useAuth();
-  const router = useRouter();
   // RTK Query call with skip if search term is empty
   const {
     data: posts,
@@ -18,7 +17,7 @@ const Nav = () => {
   } = useSearchPostsQuery(searchTerm, {
     skip: searchTerm.trim() === "",
   });
-
+  const router = useRouter();
   const filteredSuggestions =
     posts
       ?.map((post) => ({
@@ -69,12 +68,7 @@ const Nav = () => {
               <Link href="/" className="hover:bg-gray-700 px-3 py-2 rounded">
                 Home
               </Link>
-              <Link
-                href="/service"
-                className="hover:bg-gray-700 px-3 py-2 rounded"
-              >
-                Service
-              </Link>
+
               {!user?.token && (
                 <>
                   <Link
@@ -91,18 +85,13 @@ const Nav = () => {
                   </Link>
                 </>
               )}
-              <Link
-                href="/about"
-                className="hover:bg-gray-700 px-3 py-2 rounded"
-              >
-                About Us
-              </Link>
+
               {user?.token && (
                 <Link
                   href="/dashbord"
                   className="hover:bg-gray-700 px-3 py-2 rounded"
                 >
-                  Dashboard
+                  Profile
                 </Link>
               )}
               {user?.user?.isAdmin === true && (
@@ -110,7 +99,7 @@ const Nav = () => {
                   href="/admindashbord"
                   className="hover:bg-gray-700 px-3 py-2 rounded"
                 >
-                  Admin Dashboard
+                  Dashboard
                 </Link>
               )}
               {user?.token && (
@@ -165,8 +154,8 @@ const Nav = () => {
                       className="px-4 py-2 text-sm hover:bg-gray-300 cursor-pointer transition-all duration-150 border-b"
                       onClick={() => {
                         setSearchTerm(item?.title);
-                        router.push(`/post/?id=${item?._id}`);
                         setSearchTerm("");
+                        router.push(`/post/${item._id}`);
                       }}
                     >
                       {item.length > 30
@@ -221,12 +210,7 @@ const Nav = () => {
               >
                 Home
               </Link>
-              <Link
-                href="/service"
-                className="block hover:bg-gray-700 px-3 py-2 rounded"
-              >
-                Service
-              </Link>
+
               {!user?.token && (
                 <>
                   <Link
@@ -243,18 +227,13 @@ const Nav = () => {
                   </Link>
                 </>
               )}
-              <Link
-                href="/about"
-                className="block hover:bg-gray-700 px-3 py-2 rounded"
-              >
-                About Us
-              </Link>
-              {user?.user?.isAdmin === false && (
+
+              {user?.token && (
                 <Link
                   href="/dashbord"
                   className="block hover:bg-gray-700 px-3 py-2 rounded"
                 >
-                  Dashboard
+                  Profile
                 </Link>
               )}
               {user?.user?.isAdmin === true && (
@@ -262,7 +241,7 @@ const Nav = () => {
                   href="/admindashbord"
                   className="block hover:bg-gray-700 px-3 py-2 rounded"
                 >
-                  Admin Dashboard
+                  Dashboard
                 </Link>
               )}
               {user?.token && (

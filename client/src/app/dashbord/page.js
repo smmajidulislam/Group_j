@@ -118,7 +118,9 @@ export default function DashboardPage() {
 
                         {isLong && (
                           <span className="text-blue-600 hover:text-blue-800 text-sm font-medium px-4 py-2 rounded-md border border-blue-600 hover:bg-blue-100 transition-all">
-                            Read more
+                            <Link href={{ pathname: `/post/${post._id}` }}>
+                              Read more
+                            </Link>
                           </span>
                         )}
                       </div>
