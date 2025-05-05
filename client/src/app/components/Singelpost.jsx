@@ -27,7 +27,7 @@ import {
   setEditCommentText,
   updatePostInState,
 } from "../features/slice/publicPostSlice/publicPostSlice";
-
+import { toast } from "react-toastify";
 const Singelpost = ({ id }) => {
   const postID = id;
 
@@ -92,10 +92,11 @@ const Singelpost = ({ id }) => {
   }, [singelPost, commentData, dispatch, postID]);
 
   const handleLike = () => {
-    if (!user?.token) return alert("Please log in to like the post.");
+    if (!user?.token) return toast.success("Please log in to like the post.");
     const userCookie = Cookies.get("user");
     const userData = userCookie ? JSON.parse(userCookie) : {};
-    if (userData.likedPosts?.includes(postID)) return alert("Already liked.");
+    if (userData.likedPosts?.includes(postID))
+      return toast.success("Already liked.");
     const updatedLikedPosts = [...(userData.likedPosts || []), postID];
     const updatedDislikedPosts = (userData.dislikedPosts || []).filter(
       (id) => id !== postID
@@ -112,11 +113,12 @@ const Singelpost = ({ id }) => {
   };
 
   const handleDislike = () => {
-    if (!user?.token) return alert("Please log in to dislike the post.");
+    if (!user?.token)
+      return toast.success("Please log in to dislike the post.");
     const userCookie = Cookies.get("user");
     const userData = userCookie ? JSON.parse(userCookie) : {};
     if (userData.dislikedPosts?.includes(postID))
-      return alert("Already disliked.");
+      return toast.success("Already disliked.");
     const updatedDislikedPosts = [...(userData.dislikedPosts || []), postID];
     const updatedLikedPosts = (userData.likedPosts || []).filter(
       (id) => id !== postID
