@@ -206,6 +206,7 @@ const Nav = () => {
             <>
               <Link
                 href="/"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="block hover:bg-gray-700 px-3 py-2 rounded"
               >
                 Home
@@ -215,12 +216,14 @@ const Nav = () => {
                 <>
                   <Link
                     href="/login"
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     className="block hover:bg-gray-700 px-3 py-2 rounded"
                   >
                     Login
                   </Link>
                   <Link
                     href="/signup"
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     className="block hover:bg-gray-700 px-3 py-2 rounded"
                   >
                     Signup
@@ -231,6 +234,7 @@ const Nav = () => {
               {user?.token && (
                 <Link
                   href="/dashbord"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                   className="block hover:bg-gray-700 px-3 py-2 rounded"
                 >
                   Profile
@@ -239,6 +243,7 @@ const Nav = () => {
               {user?.user?.isAdmin === true && (
                 <Link
                   href="/admindashbord"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                   className="block hover:bg-gray-700 px-3 py-2 rounded"
                 >
                   Dashboard
@@ -247,7 +252,10 @@ const Nav = () => {
               {user?.token && (
                 <button
                   className="hover:bg-gray-700 px-3 py-2 rounded"
-                  onClick={() => logout()}
+                  onClick={() => {
+                    logout();
+                    setIsMobileMenuOpen(!isMobileMenuOpen);
+                  }}
                 >
                   Log Out
                 </button>

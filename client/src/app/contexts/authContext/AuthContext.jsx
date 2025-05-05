@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState({
-    role:"user"
+    role: "user",
   });
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -17,9 +17,10 @@ export const AuthProvider = ({ children }) => {
     if (userData) {
       setUser(JSON.parse(userData));
     }
+
     setIsLoading(false);
   }, []);
-  
+
   const logout = () => {
     Cookies.remove("user");
     setUser(null);
