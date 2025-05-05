@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { set, useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { useRegisterMutation } from "../features/api/loginSlice/loginApiSlice";
 import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -19,6 +20,8 @@ export default function SignupPage() {
     registerUser,
     { data, isLoading: isLoadingRegistration, isError, isSuccess, error },
   ] = useRegisterMutation();
+
+  const router = useRouter();
 
   const password = watch("password");
 
@@ -42,6 +45,9 @@ export default function SignupPage() {
         theme: "colored",
       });
       reset();
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
     }
     if (isError) {
       if (error?.data?.message) {
